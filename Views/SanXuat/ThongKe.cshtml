@@ -1,0 +1,117 @@
+@model Zentro.Models.StatisticsViewModel
+@{
+    ViewData["Title"] = "Thống kê sản xuất";
+    var system = Model.HeThong;
+    var total = Model.Total;
+    var ok = Model.Ok;
+    var yield = Model.YieldPercent;
+    var maxTrend = Math.Max(1, Model.Trend.Select(item => item.Value).DefaultIfEmpty().Max());
+    var maxOee = Math.Max(1, Model.OeeByHour.Select(item => item.Oee).DefaultIfEmpty().Max());
+}
+
+<h1 class="hmi-page-title">THỐNG KÊ SẢN XUẤT</h1>
+
+<div class="hmi-panel">
+    <div class="hmi-panel-title">HIỆU SUẤT THIẾT BỊ</div>
+    <div class="hmi-oee-layout">
+        <div class="hmi-oee-score"><span>OEE</span><strong>@((Model.Oee.Oee * 100).ToString("0.0"))%</strong></div>
+        <div class="hmi-oee-metrics">
+            <div><span>AVAILABILITY</span><strong>@((Model.Oee.Availability * 100).ToString("0.0"))%</strong></div>
+            <div><span>PERFORMANCE</span><strong>@((Model.Oee.Performance * 100).ToString("0.0"))%</strong></div>
+            <div><span>QUALITY</span><strong>@((Model.Oee.Quality * 100).ToString("0.0"))%</strong></div>
+        </div>
+    </div>
+</div>
+
+<div class="hmi-panel">
+    <div class="hmi-panel-title">OEE THEO GIỜ / NGÀY / LOT</div>
+    <div class="hmi-btn-row">
+        <button type="button" class="hmi-btn hmi-btn-green" data-oee-tab="hour">THEO GIỜ</button>
+        <button type="button" class="hmi-btn" data-oee-tab="day">THEO NGÀY</button>
+        <button type="button" class="hmi-btn" data-oee-tab="lot">THEO LOT</button>
+    </div>
+    <div class="hmi-oee-chart" data-oee-chart="hour">
+        @foreach (var point in Model.OeeByHour)
+        {
+            <div class="hmi-trend-column"><span class="hmi-trend-value">@point.Oee.ToString("0.0")%</span><div class="hmi-trend-bar" style="height:@Math.Max(8, point.Oee * 100 / maxOee)%"></div><span class="hmi-trend-label">@point.Label</span></div>
+        }
+    </div>
+    <div class="hmi-oee-chart" data-oee-chart="day" hidden>
+        @foreach (var point in Model.OeeByDay)
+        {
+            <div class="hmi-trend-column"><span class="hmi-trend-value">@point.Oee.ToString("0.0")%</span><div class="hmi-trend-bar" style="height:@Math.Max(8, point.Oee)%"></div><span class="hmi-trend-label">@point.Label</span></div>
+        }
+    </div>
+    <div class="hmi-oee-chart" data-oee-chart="lot" hidden>
+        @foreach (var point in Model.OeeByLot)
+        {
+            <div class="hmi-trend-column"><span class="hmi-trend-value">@point.Oee.ToString("0.0")%</span><div class="hmi-trend-bar" style="height:@Math.Max(8, point.Oee)%"></div><span class="hmi-trend-label">@point.Label</span></div>
+        }
+    </div>
+</div>
+
+<div class="hmi-panel">
+    <div class="hmi-panel-title">TỔNG QUAN NHÀ MÁY</div>
+    <div class="hmi-grid-4">
+        <div class="hmi-stat"><div class="hmi-stat-label">TỔNG SẢN LƯỢNG</div><div class="hmi-stat-value hmi-info">@total</div><div class="hmi-stat-sub">SẢN PHẨM</div></div>
+        <div class="hmi-stat"><div class="hmi-stat-label">OK / NG</div><div class="hmi-stat-value"><span class="hmi-running">@ok</span> / <span class="hmi-warning">@Model.Ng</span></div><div class="hmi-stat-sub">CHẤT LƯỢNG</div></div>
+        <div class="hmi-stat"><div class="hmi-stat-label">YIELD</div><div class="hmi-stat-value @(yield >= 95 ? "hmi-running" : "hmi-warning")">@yield%</div><div class="hmi-stat-sub">TỶ LỆ ĐẠT</div></div>
+        <div class="hmi-stat"><div class="hmi-stat-label">ALARM</div><div class="hmi-stat-value hmi-warning">@Model.AlarmCount</div><div class="hmi-stat-sub">SỰ KIỆN</div></div>
+    </div>
+</div>
+
+<div class="hmi-report-grid">
+    <div class="hmi-panel">
+        <div class="hmi-panel-title">HIỆU SUẤT MÁY</div>
+        <div class="hmi-form-row"><label>RUN TIME</label><strong class="hmi-running">@system.RunTime.ToString(@"hh\:mm\:ss")</strong></div>
+        <div class="hmi-form-row"><label>STOP TIME</label><strong>@system.StopTime.ToString(@"hh\:mm\:ss")</strong></div>
+        <div class="hmi-form-row"><label>DOWNTIME</label><strong class="hmi-warning">@(system.RunTime + system.StopTime == TimeSpan.Zero ? 0 : (int)(system.StopTime.TotalSeconds * 100 / (system.RunTime + system.StopTime).TotalSeconds))%</strong></div>
+        <div class="hmi-form-row"><label>CYCLE TIME</label><strong>@system.AverageCycleTimeSeconds.ToString("0.0") s/SP</strong></div>
+    </div>
+    <div class="hmi-panel">
+        <div class="hmi-panel-title">SẢN LƯỢNG THEO LOẠI</div>
+        @foreach (var loai in Zentro.Models.BangTaiModel.LoaiLinhKien)
+        {
+            var count = Model.ProductCounts.GetValueOrDefault(loai);
+            var width = count * 100 / Math.Max(1, ok);
+            <div class="hmi-report-row"><span>@loai</span><strong class="hmi-info">@count</strong><div class="hmi-report-bar"><span style="width:@width%"></span></div></div>
+        }
+    </div>
+</div>
+
+<div class="hmi-panel">
+    <div class="hmi-panel-title">XU HƯỚNG SẢN LƯỢNG THEO THỜI GIAN</div>
+    @if (Model.Trend.Count == 0)
+    {
+        <p class="hmi-stat-sub">Chưa có dữ liệu xu hướng. Hãy chạy AUTO hoặc thao tác MANUAL.</p>
+    }
+    else
+    {
+        <div class="hmi-trend-chart">
+        @foreach (var point in Model.Trend)
+        {
+            var height = Math.Max(8, point.Value * 100 / maxTrend);
+            <div class="hmi-trend-column"><span class="hmi-trend-value">@point.Value</span><div class="hmi-trend-bar" style="height:@height%"></div><span class="hmi-trend-label">@point.Label</span></div>
+        }
+        </div>
+    }
+</div>
+
+<div class="hmi-panel">
+    <div class="hmi-panel-title">ĐIỀU HƯỚNG</div>
+    <div class="hmi-btn-row"><a class="hmi-btn hmi-btn-green" asp-action="BaoCao">MỞ BÁO CÁO CHI TIẾT</a></div>
+</div>
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('[data-oee-tab]').forEach((button) => {
+            button.addEventListener('click', () => {
+                const selected = button.dataset.oeeTab;
+                document.querySelectorAll('[data-oee-chart]').forEach((chart) => {
+                    chart.hidden = chart.dataset.oeeChart !== selected;
+                });
+                document.querySelectorAll('[data-oee-tab]').forEach((item) => item.classList.toggle('hmi-btn-green', item === button));
+            });
+        });
+    </script>
+}

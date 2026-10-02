@@ -1,0 +1,72 @@
+@model Zentro.Models.PinViewModel
+@{
+    Layout = null;
+    ViewData["Title"] = "Xác thực mã PIN";
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ZENTRO – XÁC THỰC TRUY CẬP</title>
+    <link rel="stylesheet" href="~/css/hmi.css" asp-append-version="true" />
+</head>
+<body class="hmi-body login-body">
+    <main class="login-shell">
+        <section class="login-panel" aria-labelledby="pin-title">
+            <div class="login-brand"><img class="zentro-logo" src="~/images/zentro-logo.svg" alt="Zentro" /><span>ZENTRO</span></div>
+            <div class="login-status"><span class="login-status-dot"></span> MẬT KHẨU ĐÃ XÁC NHẬN</div>
+            <h1 id="pin-title">NHẬP MÃ PIN</h1>
+            <p class="login-subtitle">Nhập mã PIN để hoàn tất xác thực truy cập</p>
+
+            <form asp-controller="Account" asp-action="Pin" method="post" id="pin-form">
+                <div asp-validation-summary="ModelOnly" class="login-error"></div>
+                <label class="pin-label" for="pin-value">MÃ PIN 6 CHỮ SỐ</label>
+                <input asp-for="Pin" id="pin-value" class="pin-value" inputmode="numeric" autocomplete="one-time-code" maxlength="6" readonly />
+                <div class="pin-dots" aria-label="Số PIN đã nhập">
+                    <span></span><span></span><span></span><span></span><span></span><span></span>
+                </div>
+                <span asp-validation-for="Pin" class="login-field-error"></span>
+
+                <div class="pin-keypad" aria-label="Bàn phím nhập mã PIN">
+                    @for (var number = 1; number <= 9; number++)
+                    {
+                        <button type="button" class="pin-key" data-pin-key="@number">[ @number ]</button>
+                    }
+                    <button type="button" class="pin-key pin-key-action" data-pin-clear>NHẬP LẠI</button>
+                    <button type="button" class="pin-key" data-pin-key="0">[ 0 ]</button>
+                    <button type="button" class="pin-key pin-key-action" data-pin-backspace>XÓA</button>
+                </div>
+                <button type="submit" class="hmi-btn hmi-btn-green login-submit pin-confirm" disabled>XÁC NHẬN</button>
+            </form>
+            <div class="login-footer">TWO-STEP VERIFICATION // AUTHORIZED PERSONNEL ONLY</div>
+        </section>
+    </main>
+    <script>
+        (() => {
+            const input = document.getElementById('pin-value');
+            const dots = [...document.querySelectorAll('.pin-dots span')];
+            const confirm = document.querySelector('.pin-confirm');
+            const update = () => {
+                dots.forEach((dot, index) => dot.classList.toggle('filled', index < input.value.length));
+                confirm.disabled = input.value.length !== 6;
+            };
+            document.querySelectorAll('[data-pin-key]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    if (input.value.length < 6) input.value += button.dataset.pinKey;
+                    update();
+                });
+            });
+            document.querySelector('[data-pin-clear]').addEventListener('click', () => {
+                input.value = '';
+                update();
+            });
+            document.querySelector('[data-pin-backspace]').addEventListener('click', () => {
+                input.value = input.value.slice(0, -1);
+                update();
+            });
+            update();
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+@model Zentro.Models.BangTaiModel
+@{
+    ViewData["Title"] = "Phân loại";
+}
+
+<h1 class="hmi-page-title">MÁY PHÂN LOẠI</h1>
+
+<div class="hmi-panel">
+    <div style="display:flex; justify-content:space-between;">
+        <span>THIẾT BỊ: MÁY PHÂN LOẠI 01</span>
+        <span class="hmi-online">● ONLINE</span>
+    </div>
+</div>
+
+<div class="hmi-status-bar @(Model.DangXuLy ? "running" : "stopped")">
+    @(Model.DangXuLy ? "ĐANG PHÂN LOẠI" : "SẴN SÀNG")
+</div>
+
+<div class="hmi-panel">
+    <div class="hmi-panel-title">SẢN LƯỢNG PHÂN LOẠI</div>
+    <table class="hmi-table">
+        <thead>
+            <tr>
+                <th>LOẠI LINH KIỆN</th>
+                <th>SỐ LƯỢNG</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var loai in BangTaiModel.LoaiLinhKien)
+            {
+                <tr>
+                    <td>@loai</td>
+                    <td class="hmi-running">@Model.SoLuongTheoLoai.GetValueOrDefault(loai)</td>
+                </tr>
+            }
+            <tr>
+                <td class="hmi-error">Lỗi</td>
+                <td class="hmi-error">@Model.SoLoi</td>
+            </tr>
+            <tr>
+                <td><strong>TỔNG</strong></td>
+                <td><strong class="hmi-info">@Model.SoSanPham</strong></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="hmi-panel">
+    <div class="hmi-panel-title">CƠ CẤU ĐẨY</div>
+    <div class="hmi-grid-3">
+        <div class="hmi-stat">
+            <div class="hmi-stat-label">CƠ CẤU ĐẨY 1</div>
+            <div class="hmi-stat-value @(Model.XyLanhA ? "hmi-running" : "")">@(Model.XyLanhA ? "ON" : "OFF")</div>
+        </div>
+        <div class="hmi-stat">
+            <div class="hmi-stat-label">CƠ CẤU ĐẨY 2</div>
+            <div class="hmi-stat-value @(Model.XyLanhB ? "hmi-running" : "")">@(Model.XyLanhB ? "ON" : "OFF")</div>
+        </div>
+        <div class="hmi-stat">
+            <div class="hmi-stat-label">CẢM BIẾN</div>
+            <div class="hmi-stat-value @(Model.CamBien ? "hmi-running" : "")">@(Model.CamBien ? "ON" : "OFF")</div>
+        </div>
+    </div>
+</div>
+
+<div class="hmi-panel">
+    <div class="hmi-panel-title">LỊCH SỬ PHÂN LOẠI (GẦN NHẤT)</div>
+    <table class="hmi-table">
+        <thead>
+            <tr>
+                <th>MÃ SP</th>
+                <th>LOẠI</th>
+                <th>KẾT QUẢ</th>
+                <th>THỜI GIAN</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.ProductHistory.Count == 0)
+            {
+                <tr><td colspan="4">Chưa có sản phẩm.</td></tr>
+            }
+            @foreach (var sp in Model.ProductHistory.Take(10))
+            {
+                <tr>
+                    <td>@sp.MaSp</td>
+                    <td>@sp.Loai</td>
+                    <td class="@(sp.KetQua == "Lỗi" ? "hmi-error" : "hmi-running")">@sp.KetQua</td>
+                    <td>@sp.ThoiGian</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

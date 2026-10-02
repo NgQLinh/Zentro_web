@@ -1,0 +1,37 @@
+@model Zentro.Models.GiaCongViewModel
+@{ ViewData["Title"] = "Gia công"; ViewData["Menu"] = "giacong"; }
+<h1 class="hmi-page-title">QUẢN LÝ GIA CÔNG</h1>
+@if (!string.IsNullOrWhiteSpace(Model.Message)) { <div class="hmi-panel @(Model.IsError ? "hmi-error" : "hmi-running")">@Model.Message</div> }
+<div class="hmi-panel">
+	<div class="hmi-panel-title">CHỌN MÁY VÀ PART</div>
+	<form asp-action="Start" method="post">
+		@Html.AntiForgeryToken()
+		<div class="hmi-filter-grid">
+			<div>
+				<label>MÁY</label>
+				<select class="hmi-input" name="maMay" onchange="this.form.action='@Url.Action("Index")'; this.form.method='get'; this.form.requestSubmit()">
+					@foreach (var machine in Model.Machines)
+					{
+						<option value="@machine.MaMay" selected="@(machine.MaMay == Model.SelectedMaMay ? "selected" : null)" disabled="@(!Model.AssignedMachines.Contains(machine.MaMay))">@machine.MaMay - @machine.Ten (@machine.TrangThai)@(!Model.AssignedMachines.Contains(machine.MaMay) ? " - CHƯA PHÂN CÔNG" : "")</option>
+					}
+				</select>
+			</div>
+			<div>
+				<label>INDEX / CHI TIẾT / MÃ SP</label>
+				<select class="hmi-input" name="partId">
+					@foreach (var part in Model.Parts)
+					{
+						<option value="@part.Id" selected="@(part.Id == Model.SelectedPartId ? "selected" : null)">@part.MaIndex - @part.TenChiTiet - @part.MaSp</option>
+					}
+				</select>
+			</div>
+			<div>
+				<label>LOT</label>
+				<input class="hmi-input" name="lot" value="@Model.Lot" />
+			</div>
+		</div>
+		<button class="hmi-btn hmi-btn-green" type="submit" @(Model.ActiveJob != null || !Model.AssignedMachines.Contains(Model.SelectedMaMay ?? string.Empty) ? "disabled" : null)>BẮT ĐẦU GIA CÔNG</button>
+	</form>
+</div>
+@if (Model.ActiveJob != null) { <div class="hmi-panel"><div class="hmi-panel-title">ĐANG GIA CÔNG</div><div class="hmi-form-row"><label>MÁY</label><span>@Model.ActiveJob.MaMay</span></div><div class="hmi-form-row"><label>PART</label><span>@Model.ActiveJob.MaIndex - @Model.ActiveJob.TenChiTiet</span></div><form asp-action="End" method="post"><input type="hidden" name="id" value="@Model.ActiveJob.Id" /><input type="hidden" name="maMay" value="@Model.SelectedMaMay" /><select class="hmi-input" name="ketQua"><option>OK</option><option>NG</option></select> <button class="hmi-btn hmi-btn-yellow" type="submit">KẾT THÚC</button></form></div> }
+<div class="hmi-panel"><div class="hmi-panel-title">LỊCH SỬ GIA CÔNG</div><table class="hmi-table"><thead><tr><th>MÁY</th><th>INDEX</th><th>MÃ SP</th><th>NHÂN VIÊN</th><th>BẮT ĐẦU</th><th>KẾT THÚC</th><th>KẾT QUẢ</th></tr></thead><tbody>@foreach (var row in Model.History) { <tr><td>@row.MaMay</td><td>@row.MaIndex</td><td>@row.MaSp</td><td>@row.Username</td><td>@row.ThoiGianBatDau.ToString("dd/MM HH:mm:ss")</td><td>@row.ThoiGianKetThuc?.ToString("dd/MM HH:mm:ss")</td><td>@row.KetQua</td></tr> }</tbody></table></div>

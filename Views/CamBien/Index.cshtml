@@ -1,0 +1,38 @@
+@model List<Zentro.Models.SensorItem>
+@{
+    ViewData["Title"] = "Giám sát cảm biến";
+}
+
+<h1 class="hmi-page-title">GIÁM SÁT CẢM BIẾN</h1>
+
+<div class="hmi-panel">
+    <table class="hmi-table">
+        <thead>
+            <tr>
+                <th>MÃ</th>
+                <th>TÊN</th>
+                <th>LOẠI</th>
+                <th>TRẠNG THÁI</th>
+                <th>GIÁ TRỊ</th>
+                <th>MÔ TẢ</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Ma</td>
+                    <td>@item.Ten</td>
+                    <td>@item.Loai</td>
+                    <td class="@(item.TrangThai == "ACTIVE" ? "hmi-running" : "")">@item.TrangThai</td>
+                    <td class="@(item.IsOn ? "hmi-running" : "")">@item.GiaTri</td>
+                    <td>@item.MoTa</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div class="hmi-btn-row">
+    <a class="hmi-btn" asp-controller="NhatKy" asp-action="Index">[ XEM LỊCH SỬ DỮ LIỆU ]</a>
+</div>

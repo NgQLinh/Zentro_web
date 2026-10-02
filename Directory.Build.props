@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <BaseIntermediateOutputPath>$(TEMP)\Zentro_obj\</BaseIntermediateOutputPath>
+    <BaseOutputPath>$(TEMP)\Zentro_bin\</BaseOutputPath>
+  </PropertyGroup>
+</Project>

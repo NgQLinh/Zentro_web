@@ -1,0 +1,424 @@
+@model Zentro.Models.DashboardMonitoringModel
+@{
+    ViewData["Title"] = "TỔNG QUAN";
+}
+
+<h1 class="hmi-page-title">DASHBOARD TỔNG QUAN</h1>
+
+<!-- Status Strip -->
+<div class="hmi-status-bar">
+    <div class="status-item @(Model.TrangThaiHeThong == "NORMAL" ? "status-ok" : "status-warn")">
+        HỆ THỐNG: @Model.TrangThaiHeThong
+    </div>
+    <div class="status-item">
+        THIẾT BỊ CHẠY: @Model.SoThietBiHoatDong/@Model.TongSoMay
+    </div>
+    <div class="status-item">RUNNING: @Model.SoMayRunning | PAUSED: @Model.SoMayPaused</div>
+    <div class="status-item">STOPPED: @Model.SoMayStopped</div>
+    <div class="status-item">TỶ LỆ HOẠT ĐỘNG: @Model.TyLeHoatDong.ToString("0.0")%</div>
+    <div class="status-item">
+        CẢM BIẾN HOẠT ĐỘNG: @Model.SoCamBienHoatDong/@Model.CamBien.Count
+    </div>
+</div>
+
+<div class="hmi-panel hmi-plc-status-panel">
+    <div class="hmi-panel-title">PLC STATUS</div>
+    <div class="hmi-plc-overview">
+        <section class="hmi-plc-overview-block hmi-plc-primary">
+            <div class="hmi-plc-primary-content">
+                <div>
+                    <div class="hmi-plc-status-row">
+                        <span id="plc-status-indicator" class="hmi-plc-indicator @(Model.Plc.IsConnected ? "connected" : "disconnected")" aria-hidden="true"></span>
+                        <strong id="plc-status-text">@(Model.Plc.IsConnected && !Model.Plc.IsStale ? "CONNECTED" : "OFFLINE")</strong>
+                    </div>
+                    <div class="hmi-plc-mode">CHẾ ĐỘ: <strong id="plc-mode-label">@(ViewBag.PlcSimulationMode ? "MÔ PHỎNG" : "PLC THẬT")</strong></div>
+                    <div id="dashboard-realtime-status" class="hmi-stat-sub" role="status" aria-live="polite">REALTIME: CONNECTING</div>
+                </div>
+                @if (User.IsInRole("Admin"))
+                {
+                    <form asp-controller="Home" asp-action="TogglePlcSimulation" method="post">
+                        <button class="hmi-btn hmi-plc-toggle" type="submit" onclick="return confirm('@(ViewBag.PlcSimulationMode ? "Tắt mô phỏng và bắt đầu kết nối PLC thật?" : "Bật lại chế độ mô phỏng?")')">
+                            @(ViewBag.PlcSimulationMode ? "DÙNG PLC THẬT" : "BẬT MÔ PHỎNG")
+                        </button>
+                    </form>
+                }
+            </div>
+        </section>
+        <section class="hmi-plc-overview-block">
+            <div class="hmi-plc-metric-label">LẦN CẬP NHẬT CUỐI</div>
+            <strong id="plc-last-communication" class="hmi-plc-metric-value">@(Model.Plc.LastCommunication?.ToString("HH:mm:ss") ?? "N/A")</strong>
+            <div id="plc-update-age" class="hmi-plc-metric-detail">@(Model.Plc.SecondsSinceLastUpdate.HasValue ? $"{Model.Plc.SecondsSinceLastUpdate} giây trước" : "Chưa có dữ liệu")</div>
+            <div id="plc-no-data-warning" class="hmi-plc-warning" role="status" aria-live="polite" @(Model.Plc.IsStale ? "" : "hidden")>Không nhận dữ liệu trong 10 giây</div>
+        </section>
+        <section class="hmi-plc-overview-block">
+            <div class="hmi-plc-metric-label">MÁY PLC</div>
+            <strong id="plc-machine-total" class="hmi-plc-metric-value">—</strong>
+            <div class="hmi-plc-metric-detail"><span id="plc-machine-online" class="hmi-running">— online</span> · <span id="plc-machine-offline" class="hmi-error">— offline</span></div>
+        </section>
+        <section class="hmi-plc-overview-block hmi-plc-error-block">
+            <div class="hmi-plc-metric-label">TÌNH TRẠNG KẾT NỐI</div>
+            <strong id="plc-last-error" class="hmi-plc-metric-detail" role="status" aria-live="polite">Đang lấy trạng thái...</strong>
+        </section>
+    </div>
+</div>
+
+<div class="hmi-panel">
+    <div class="hmi-panel-title">PLC LIVE TELEMETRY</div>
+    <table class="hmi-table">
+        <thead>
+            <tr><th>MÁY</th><th>KẾT NỐI</th><th>TRẠNG THÁI</th><th>CẢM BIẾN</th><th>NHIỆT ĐỘ</th><th>ALARM</th><th>CẬP NHẬT</th></tr>
+        </thead>
+        <tbody id="plc-live-telemetry">
+            <tr><td colspan="7">Đang chờ dữ liệu PLC...</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="hmi-panel">
+    <div class="hmi-panel-title">TRẠNG THÁI THIẾT BỊ</div>
+    <div class="hmi-status-legend">
+        <span class="status-running">● RUNNING</span>
+        <span class="status-stopped">● STOPPED</span>
+        <span class="status-alarm">● ALARM</span>
+        <span class="status-maintenance">● MAINTENANCE</span>
+        <span class="status-offline">● OFFLINE</span>
+    </div>
+</div>
+
+<!-- Production Summary -->
+<div class="hmi-panel">
+    <div class="hmi-panel-title">TÓM TẮT SẢN XUẤT HÔM NAY</div>
+    
+    <div class="hmi-grid-4">
+        <div class="hmi-stat">
+            <div class="hmi-stat-label">TỔNG SẢN LƯỢNG</div>
+            <div class="hmi-stat-value">@Model.SanXuat.TongSanLuong</div>
+        </div>
+        <div class="hmi-stat">
+            <div class="hmi-stat-label">SẢN PHẨM OK</div>
+            <div class="hmi-stat-value hmi-running">@Model.SanXuat.SanLuongOK</div>
+        </div>
+        <div class="hmi-stat">
+            <div class="hmi-stat-label">SẢN PHẨM NG</div>
+            <div class="hmi-stat-value hmi-warning">@Model.SanXuat.SanLuongNG</div>
+        </div>
+        <div class="hmi-stat">
+            <div class="hmi-stat-label">TỶ LỆ OK</div>
+            <div class="hmi-stat-value hmi-info">@Model.SanXuat.TyLeOK.ToString("F1")%</div>
+        </div>
+    </div>
+
+    <div class="hmi-form-row">
+        <label>SẢN PHẨM HIỆN TẠI:</label>
+        <span>@(!string.IsNullOrEmpty(Model.SanXuat.SanPhamHienTai) ? Model.SanXuat.SanPhamHienTai : "N/A")</span>
+    </div>
+    <div class="hmi-form-row">
+        <label>LÔ HIỆN TẠI:</label>
+        <span>@(!string.IsNullOrEmpty(Model.SanXuat.LoHienTai) ? Model.SanXuat.LoHienTai : "Không có lô hiện tại")</span>
+        @if (!string.IsNullOrEmpty(Model.SanXuat.LoHienTai))
+        {
+            <a class="hmi-btn hmi-btn-small" asp-controller="SanXuat" asp-action="BaoCao" asp-route-Lot="@Model.SanXuat.LoHienTai">XEM BÁO CÁO LOT</a>
+        }
+    </div>
+    <div class="hmi-grid-4">
+        <div class="hmi-stat"><div class="hmi-stat-label">THỜI GIAN CHẠY</div><div class="hmi-stat-value hmi-running">@Model.SanXuat.ThoiGianChay.ToString(@"h' giờ 'mm' phút'")</div></div>
+        <div class="hmi-stat"><div class="hmi-stat-label">THỜI GIAN DỪNG</div><div class="hmi-stat-value hmi-warning">@Model.SanXuat.ThoiGianDung.ToString(@"h' giờ 'mm' phút'")</div></div>
+        <div class="hmi-stat"><div class="hmi-stat-label">SỐ LẦN CẢNH BÁO</div><div class="hmi-stat-value hmi-warning">@Model.SanXuat.SoLanCanhBao</div></div>
+        <div class="hmi-stat"><div class="hmi-stat-label">PLC</div><div class="hmi-stat-value @(Model.Plc.IsConnected && !Model.Plc.IsStale ? "hmi-running" : "hmi-error")">@(Model.Plc.IsConnected && !Model.Plc.IsStale ? "CONNECTED" : "OFFLINE")</div></div>
+    </div>
+</div>
+
+<script>
+    (() => {
+        const updatePlcStatus = async () => {
+            try {
+                const response = await fetch('@Url.Action("GetPlcStatus", "Home")', { cache: 'no-store' });
+                if (!response.ok) return;
+
+                const status = await response.json();
+                const indicator = document.getElementById('plc-status-indicator');
+                indicator.className = `hmi-plc-indicator ${status.isConnected && !status.isStale ? 'connected' : 'disconnected'}`;
+                document.getElementById('plc-status-text').textContent = status.isConnected && !status.isStale ? 'CONNECTED' : 'OFFLINE';
+                document.getElementById('plc-last-communication').textContent = status.lastCommunication
+                    ? new Date(status.lastCommunication).toLocaleTimeString('vi-VN', { hour12: false })
+                    : 'N/A';
+                const age = status.secondsSinceLastUpdate;
+                document.getElementById('plc-update-age').textContent = age === null
+                    ? 'Chưa có dữ liệu'
+                    : `${age} giây trước`;
+                document.getElementById('plc-no-data-warning').hidden = !status.isStale;
+                document.getElementById('plc-mode-label').textContent = status.simulationMode ? 'MÔ PHỎNG' : 'PLC THẬT';
+                renderPlcSummary(status.machines);
+            } catch {
+                // Giữ trạng thái gần nhất nếu endpoint tạm thời không phản hồi.
+            }
+        };
+
+        const statusText = document.getElementById('dashboard-realtime-status');
+        const telemetryBody = document.getElementById('plc-live-telemetry');
+        const statusNames = { 0: 'STOPPED', 1: 'RUNNING', 2: 'PAUSED', 4: 'ALARM', 5: 'MAINTENANCE' };
+
+        const renderPlcSummary = (machines = []) => {
+            const onlineCount = machines.filter((machine) => machine.online).length;
+            const offlineMachines = machines.filter((machine) => !machine.online);
+            document.getElementById('plc-machine-total').textContent = machines.length;
+            document.getElementById('plc-machine-online').textContent = `${onlineCount} online`;
+            document.getElementById('plc-machine-offline').textContent = `${offlineMachines.length} offline`;
+
+            const errorMachine = offlineMachines.find((machine) => machine.lastError);
+            const errorText = errorMachine
+                ? `${errorMachine.maMay}: ${errorMachine.lastError}`
+                : offlineMachines.length
+                    ? `${offlineMachines[0].maMay}: Không nhận được dữ liệu PLC`
+                    : 'Không có lỗi kết nối';
+            const errorElement = document.getElementById('plc-last-error');
+            errorElement.textContent = errorText;
+            errorElement.className = offlineMachines.length ? 'hmi-plc-metric-detail hmi-error' : 'hmi-plc-metric-detail hmi-running';
+        };
+
+        const renderSnapshot = (snapshot) => {
+            const connected = snapshot.isConnected;
+            renderPlcSummary(snapshot.machines);
+            const indicator = document.getElementById('plc-status-indicator');
+            indicator.className = `hmi-plc-indicator ${connected ? 'connected' : 'disconnected'}`;
+            document.getElementById('plc-status-text').textContent = connected ? 'CONNECTED' : 'OFFLINE';
+            document.getElementById('plc-last-communication').textContent = snapshot.lastCommunication
+                ? new Date(snapshot.lastCommunication).toLocaleTimeString('vi-VN', { hour12: false })
+                : 'N/A';
+            document.getElementById('plc-update-age').textContent = snapshot.lastCommunication ? 'Last update: vừa xong' : 'Last update: N/A';
+            document.getElementById('plc-no-data-warning').hidden = connected;
+
+            if (snapshot.machines.length === 0) {
+                telemetryBody.innerHTML = '<tr><td colspan="7">Chưa có máy PLC được cấu hình.</td></tr>';
+                return;
+            }
+
+            telemetryBody.replaceChildren(...snapshot.machines.map((machine) => {
+                const row = document.createElement('tr');
+                const state = machine.alarm ? 'ALARM' : (statusNames[machine.statusCode] ?? 'UNKNOWN');
+                const values = [
+                    machine.maMay,
+                    machine.online ? 'ONLINE' : 'OFFLINE',
+                    state,
+                    machine.online ? machine.sensor : 'N/A',
+                    machine.online ? `${Number(machine.temperature).toFixed(1)} °C` : 'N/A',
+                    machine.alarm ? 'ACTIVE' : 'CLEAR',
+                    machine.lastCommunication ? new Date(machine.lastCommunication).toLocaleTimeString('vi-VN', { hour12: false }) : 'N/A'
+                ];
+                values.forEach((value) => {
+                    const cell = document.createElement('td');
+                    cell.textContent = value;
+                    row.appendChild(cell);
+                });
+                row.className = machine.alarm ? 'hmi-error' : (machine.online ? 'hmi-running' : 'hmi-warning');
+                return row;
+            }));
+        };
+
+        updatePlcStatus();
+
+        if (window.signalR) {
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl('/hubs/dashboard')
+                .withAutomaticReconnect()
+                .build();
+
+            connection.on('plcSnapshotUpdated', renderSnapshot);
+            connection.onreconnecting(() => { statusText.textContent = 'REALTIME: RECONNECTING'; });
+            connection.onreconnected(() => { statusText.textContent = 'REALTIME: CONNECTED'; });
+            connection.onclose(() => { statusText.textContent = 'REALTIME: DISCONNECTED'; });
+            connection.start()
+                .then(() => { statusText.textContent = 'REALTIME: CONNECTED'; })
+                .catch(() => {
+                    statusText.textContent = 'REALTIME: UNAVAILABLE, USING POLLING';
+                    updatePlcStatus();
+                    window.setInterval(updatePlcStatus, 3000);
+                });
+        } else {
+            statusText.textContent = 'REALTIME: UNAVAILABLE, USING POLLING';
+            updatePlcStatus();
+            window.setInterval(updatePlcStatus, 3000);
+        }
+    })();
+</script>
+
+<!-- Devices Status -->
+@if (Model.ThietBi.Any())
+{
+    <div class="hmi-panel">
+        <div class="hmi-panel-title">TRẠNG THÁI THIẾT BỊ (@Model.ThietBi.Count)</div>
+        <table class="hmi-table">
+            <thead>
+                <tr>
+                    <th>MÃ THIẾT BỊ</th>
+                    <th>TÊN</th>
+                    <th>LOẠI</th>
+                    <th>TRẠNG THÁI</th>
+                    <th>TỐC ĐỘ</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var device in Model.ThietBi)
+                {
+                    <tr class="hmi-device-row status-@device.TrangThai.ToLowerInvariant()">
+                        <td>@device.Ma</td>
+                        <td>
+                            @if (device.Ma is "BT01" or "BT02")
+                            {
+                                <a asp-controller="Home" asp-action="Device" asp-route-id="@device.Ma">@device.Ten</a>
+                            }
+                            else
+                            {
+                                @device.Ten
+                            }
+                        </td>
+                        <td>@device.Loai</td>
+                        <td><strong class="device-status">● @device.TrangThai</strong></td>
+                        <td>@device.TocDo%</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+<!-- Sensors Status -->
+@if (Model.CamBien.Any())
+{
+    <div class="hmi-panel">
+        <div class="hmi-panel-title">TRẠNG THÁI CẢM BIẾN (@Model.CamBien.Count)</div>
+        <div class="hmi-grid-4">
+            @foreach (var sensor in Model.CamBien)
+            {
+                <div class="hmi-stat-box @(sensor.IsActive ? "hmi-running" : "hmi-error")">
+                    <div class="hmi-stat-label">@sensor.Ma</div>
+                    <div class="hmi-stat-value">@sensor.GiaTri</div>
+                    <div class="hmi-stat-sub">@sensor.Ten</div>
+                    @if (!string.IsNullOrEmpty(sensor.DonVi))
+                    {
+                        <div class="hmi-stat-sub">(@sensor.DonVi)</div>
+                    }
+                    <div class="hmi-stat-sub" style="margin-top: 4px;">
+                        @(sensor.IsActive ? "● HOẠT ĐỘNG" : "○ KHÔNG HOẠT ĐỘNG")
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+<!-- Maintenance Schedule -->
+@if (Model.BaoTri.Any())
+{
+    <div class="hmi-panel">
+        <div class="hmi-panel-title">LỊCH BẢO TRÌ</div>
+        <table class="hmi-table">
+            <thead>
+                <tr>
+                    <th>THIẾT BỊ</th>
+                    <th>LOẠI</th>
+                    <th>TRẠNG THÁI</th>
+                    <th>NGÀY BẢO TRÌ</th>
+                    <th>LẦN TIẾP THEO</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var maint in Model.BaoTri)
+                {
+                    var maintStatus = maint.TrangThai == "OK" ? "hmi-running" : "hmi-warning";
+                    <tr class="@maintStatus">
+                        <td>@maint.ThietBi</td>
+                        <td>@maint.Loai</td>
+                        <td><strong>@maint.TrangThai</strong></td>
+                        <td>@maint.NgayBt</td>
+                        <td>@maint.LanTiepTheo</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+<!-- Footer Info -->
+<div style="text-align: right; padding: 10px; color: var(--hmi-muted); font-size: 12px;">
+    Cập nhật: @Model.ThoiGianCapNhat.ToString("dd/MM/yyyy HH:mm:ss")
+</div>
+
+<style>
+    .hmi-status-bar {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 10px;
+        margin-bottom: 20px;
+        padding: 10px;
+        background: var(--hmi-panel);
+        border: 1px solid var(--hmi-border);
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+
+    .status-item {
+        padding: 10px 15px;
+        border-left: 3px solid var(--hmi-border);
+        color: var(--hmi-text);
+    }
+
+    .status-ok {
+        border-left-color: var(--hmi-green);
+        color: var(--hmi-green);
+    }
+
+    .status-warn {
+        border-left-color: var(--hmi-yellow);
+        color: var(--hmi-yellow);
+    }
+
+    .status-alarm {
+        border-left-color: var(--hmi-red);
+        color: var(--hmi-red);
+    }
+
+    .hmi-stat-box {
+        background: var(--hmi-panel);
+        border: 1px solid var(--hmi-border);
+        border-radius: 4px;
+        padding: 12px;
+        text-align: center;
+        font-size: 11px;
+    }
+
+    .hmi-stat-box.hmi-running {
+        border-left: 3px solid var(--hmi-green);
+    }
+
+    .hmi-stat-box.hmi-error {
+        border-left: 3px solid var(--hmi-red);
+    }
+
+    .hmi-stat-sub {
+        color: var(--hmi-muted);
+        font-size: 10px;
+    }
+
+    .hmi-empty {
+        text-align: center;
+        padding: 20px;
+        color: var(--hmi-muted);
+    }
+
+    .hmi-status-legend { display: flex; flex-wrap: wrap; gap: 18px; font-size: 12px; font-weight: 700; }
+    .status-running, .status-running .device-status { color: var(--hmi-green); }
+    .status-stopped, .status-stopped .device-status { color: var(--hmi-yellow); }
+    .status-alarm, .status-alarm .device-status { color: var(--hmi-red); }
+    .status-maintenance, .status-maintenance .device-status { color: var(--hmi-blue); }
+    .status-offline, .status-offline .device-status { color: var(--hmi-muted); }
+    .hmi-device-row a { color: inherit; }
+    .hmi-btn-small { padding: 5px 8px; font-size: 11px; margin-left: 12px; }
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+
+<script>
+</script>

@@ -1,0 +1,554 @@
+╔═══════════════════════════════════════════════════════════════════════════════╗
+║                     GIẢI THÍCH CHI TIẾT - DASHBOARD HMI                       ║
+║                      Detailed Code Explanation in Vietnamese                   ║
+╚═══════════════════════════════════════════════════════════════════════════════╝
+
+█████ 1. CẤU TRÚC DASHBOARD ██████
+
+Dashboard bao gồm 3 lớp chính:
+├─ Models (Dữ liệu)
+├─ Services (Xử lý dữ liệu)
+└─ Controllers + Views (Hiển thị & Tương tác)
+
+
+█████ 2. MODELS - ĐỊNH NGHĨA DỮ LIỆU ██████
+
+Tệp: Models/HmiModels.cs
+
+A) DashboardProductionSummary - Tóm tắt sản xuất
+   ├─ TongSanLuong: Tổng số sản phẩm được sản xuất
+   ├─ SanLuongOK: Số sản phẩm đạt chất lượng (OK)
+   ├─ SanLuongNG: Số sản phẩm không đạt (NG - Not Good)
+   ├─ TyLeOK: Tính toán tự động = (SanLuongOK / TongSanLuong) * 100
+   ├─ SanPhamHienTai: Loại sản phẩm đang sản xuất
+   └─ LoHienTai: Số lô hiện tại
+
+B) DashboardDeviceStatus - Trạng thái thiết bị
+   ├─ Ma: ID thiết bị (ví dụ: BT01, BT02)
+   ├─ Ten: Tên thiết bị (ví dụ: "Băng tải 01")
+   ├─ TrangThai: Trạng thái (RUNNING = chạy, STOPPED = dừng)
+   ├─ Loai: Loại thiết bị (CONVEYOR, SORTING, etc)
+   └─ TocDo: Tốc độ hoạt động (0-100%)
+
+C) DashboardSensorStatus - Trạng thái cảm biến
+   ├─ Ma: ID cảm biến (ví dụ: CB01, CB02)
+   ├─ Ten: Tên cảm biến
+   ├─ Loai: Loại cảm biến (Quang, Nhiệt độ, etc)
+   ├─ GiaTri: Giá trị hiện tại đọc từ database
+   ├─ IsActive: True nếu cảm biến hoạt động
+   └─ DonVi: Đơn vị đo (°C, %, kg, etc)
+
+D) DashboardMonitoringModel - Mô hình toàn bộ dashboard
+   ├─ SanXuat: DashboardProductionSummary
+   ├─ ThietBi: List<DashboardDeviceStatus>
+   ├─ CamBien: List<DashboardSensorStatus>
+   ├─ BaoDong: List<AlarmItem> (Báo động)
+   ├─ BaoTri: List<MaintenanceItem> (Bảo trì)
+   ├─ TrangThaiHeThong: "NORMAL" hoặc "WARNING"
+   ├─ SoThietBiHoatDong: Số thiết bị đang chạy
+   ├─ SoCamBienHoatDong: Số cảm biến đang hoạt động
+   ├─ SoBaoDongChuaXuLy: Số báo động chưa xử lý
+   └─ ThoiGianCapNhat: Khi nào cập nhật lần cuối
+
+
+█████ 3. SERVICES - XỬ LÝ DỮ LIỆU ██████
+
+Tệp: Services/DashboardService.cs
+
+Mục đích: Lấy dữ liệu từ Database và trả về các Model được định dạng
+
+A) Constructor
+   public DashboardService(IDbContextFactory<ProductionDbContext> contextFactory)
+   
+   - contextFactory: Factory để tạo DbContext khi cần
+   - Mẫu này cho phép thread-safe access và không leak connection
+
+B) GetDashboardData() - Phương thức chính
+   
+   ├─ Bước 1: Xác định khoảng thời gian (from, to)
+   │  └─ Mặc định: Từ đầu ngày hôm nay đến bây giờ
+   │
+   ├─ Bước 2: Lấy dữ liệu sản xuất hôm nay
+   │  └─ Query: SELECT * FROM ProductionRecords WHERE NgayGio >= from AND NgayGio <= to
+   │  └─ Đếm: Tổng, OK (KetQua="OK"), NG (KetQua="NG")
+   │
+   ├─ Bước 3: Lấy lô sản xuất hiện tại
+   │  └─ Query: SELECT TOP 1 * FROM ProductionLots ORDER BY NgayBatDau DESC
+   │  └─ Tìm lô đang RUNNING hoặc WAITING
+   │
+   ├─ Bước 4: Lấy danh sách thiết bị từ Database
+   │  └─ Query: SELECT * FROM Devices
+   │  └─ Tạo DashboardDeviceStatus cho mỗi thiết bị
+   │
+   ├─ Bước 5: Lấy danh sách cảm biến
+   │  └─ Query: SELECT * FROM Sensors
+   │  └─ Cho mỗi cảm biến:
+   │     ├─ Tìm dữ liệu cảm biến gần nhất (latest)
+   │     ├─ SELECT TOP 1 * FROM SensorData WHERE MaSensor = ? ORDER BY NgayGio DESC
+   │     └─ Chuyển GiaTri (double) thành string với 2 chữ số thập phân
+   │
+   ├─ Bước 6: Lấy báo động gần đây
+   │  └─ Query: SELECT TOP 10 * FROM AlarmRecords WHERE NgayGio >= from ORDER BY NgayGio DESC
+   │
+   ├─ Bước 7: Lấy lịch bảo trì
+   │  └─ Query: SELECT * FROM MaintenanceRecords
+   │
+   └─ Bước 8: Tính toán trạng thái hệ thống
+      └─ Nếu có báo động chưa xử lý → TrangThaiHeThong = "WARNING"
+      └─ Nếu không → TrangThaiHeThong = "NORMAL"
+
+C) Các phương thức hỗ trợ khác
+
+   GetProductionSummary() - Chỉ trả về tóm tắt sản xuất
+   GetDeviceStatus() - Chỉ danh sách thiết bị
+   GetSensorStatus() - Chỉ danh sách cảm biến
+   GetRecentAlarms(limit) - Chỉ báo động (có thể chỉ định số lượng)
+
+
+█████ 4. CONTROLLERS - XỬ LÝ YÊU CẦU HTTP ██████
+
+Tệp: Controllers/HomeController.cs
+
+A) Index() - Hiển thị Dashboard chính
+   
+   [HttpGet]
+   public IActionResult Index()
+   {
+       var dashboardModel = dashboardService.GetDashboardData();
+       return View(dashboardModel);
+   }
+   
+   ├─ Lấy dữ liệu từ DashboardService
+   ├─ Truyền vào View (Index.cshtml)
+   └─ View sử dụng @model Zentro.Models.DashboardMonitoringModel
+      để truy cập dữ liệu trong HTML
+
+B) API Endpoints - Trả về JSON
+
+   1) /api/dashboard/summary
+      └─ Trả về: DashboardProductionSummary (JSON)
+      └─ Sử dụng: Để lấy dữ liệu sản xuất cho charts
+
+   2) /api/dashboard/devices
+      └─ Trả về: List<DashboardDeviceStatus> (JSON)
+      └─ Sử dụng: Cập nhật danh sách thiết bị
+
+   3) /api/dashboard/sensors
+      └─ Trả về: List<DashboardSensorStatus> (JSON)
+      └─ Sử dụng: Cập nhật giá trị cảm biến
+
+   4) /api/dashboard/alarms
+      └─ Trả về: List<AlarmItem> (JSON)
+      └─ Sử dụng: Lấy báo động mới nhất
+
+   5) /api/dashboard/full
+      └─ Trả về: DashboardMonitoringModel (JSON)
+      └─ Sử dụng: Cập nhật toàn bộ dashboard
+
+C) Export Endpoints - Tải xuống dữ liệu
+
+   1) /api/dashboard/export/json
+      ├─ Lấy dữ liệu từ GetDashboardData()
+      ├─ Chuyển thành JSON string (Pretty Print)
+      └─ Trả về file: dashboard-yyyy-MM-dd-HHmmss.json
+
+   2) /api/dashboard/export/csv
+      ├─ Lấy dữ liệu từ GetDashboardData()
+      ├─ Tạo chuỗi CSV theo các section:
+      │  ├─ Production Summary
+      │  ├─ Device Status
+      │  ├─ Sensor Status
+      │  ├─ Recent Alarms
+      │  └─ Maintenance Schedule
+      └─ Trả về file: dashboard-yyyy-MM-dd-HHmmss.csv
+
+
+█████ 5. VIEWS - HIỂN THỊ VÀ TƯƠNG TÁC ██████
+
+Tệp: Views/Home/Index.cshtml
+
+A) Cấu trúc HTML (Razor)
+
+   @model DashboardMonitoringModel
+   ├─ @{...} - Khối Razor Code (C#)
+   ├─ @Model.SanXuat - Truy cập model
+   ├─ @for/@foreach - Vòng lặp
+   ├─ @if - Điều kiện
+   └─ @() - Biểu thức inline
+
+B) CSS Styling (Embedded)
+
+   Chủ đề: Dark Mode với Gradient Blue
+   ├─ Màu nền: linear-gradient(135deg, #1e3c72, #2a5298)
+   ├─ Màu chữ: Trắng (#fff)
+   ├─ Accent: Orange (#ff9800)
+   ├─ Success: Green (#4CAF50)
+   ├─ Error: Red (#f44336)
+   └─ Info: Blue (#2196F3)
+
+   Kỹ thuật:
+   ├─ CSS Grid: grid-template-columns: repeat(auto-fit, minmax(280px, 1fr))
+   │  └─ Tự động sắp xếp số cột dựa trên kích thước màn hình
+   │
+   ├─ CSS Animation: @keyframes pulse
+   │  └─ Làm cho status indicator nhấp nháy
+   │
+   ├─ Glassmorphic: background: rgba(255,255,255,0.08), backdrop-filter: blur(10px)
+   │  └─ Hiệu ứng kính frosted (mờ phía sau)
+   │
+   └─ Responsive: @@media (max-width: 768px)
+      └─ Điều chỉnh bố cục cho mobile
+
+C) Hiển thị Sections
+
+   1) Header
+      ├─ Status indicator (pulsing dot)
+      ├─ Color: Green (Normal), Orange (Warning), Red (Error)
+      └─ Title: "FACTORY MONITORING"
+
+   2) Production Summary Grid (4 thẻ)
+      ├─ Tổng Sản Lượng: @Model.SanXuat.TongSanLuong
+      ├─ Sản Phẩm OK: @Model.SanXuat.SanLuongOK
+      ├─ Sản Phẩm NG: @Model.SanXuat.SanLuongNG
+      └─ Tỷ Lệ OK: @Model.SanXuat.TyLeOK.ToString("F1")%
+
+   3) System Status Grid (4 thẻ)
+      ├─ Thiết Bị Hoạt Động: @Model.SoThietBiHoatDong / @Model.ThietBi.Count
+      ├─ Cảm Biến Hoạt Động: @Model.SoCamBienHoatDong / @Model.CamBien.Count
+      ├─ Báo Động Chưa Xử Lý: @Model.SoBaoDongChuaXuLy
+      └─ Sản Phẩm Hiện Tại: @Model.SanXuat.SanPhamHienTai
+
+   4) Production Flow Diagram
+      ├─ Vòng lặp qua các cảm biến (Sensors)
+      ├─ Vòng lặp qua các thiết bị (Devices)
+      └─ Hiển thị với mũi tên → để chỉ hướng
+
+   5) Devices Section
+      ├─ @foreach (var device in Model.ThietBi)
+      ├─ Hiển thị: Tên, Trạng thái, Tốc độ
+      └─ Màu sắc:
+         ├─ Green border nếu RUNNING
+         └─ Red border nếu STOPPED
+
+   6) Sensors Section
+      ├─ @foreach (var sensor in Model.CamBien)
+      ├─ Hiển thị: ID, Giá trị, Tên, Đơn vị
+      └─ CSS class:
+         ├─ .sensor-item.active nếu IsActive = true
+         └─ .sensor-item.inactive nếu IsActive = false
+
+   7) Alarms Table
+      ├─ <table> HTML
+      ├─ @foreach (var alarm in Model.BaoDong.Take(10))
+      ├─ Cột: Mức Độ, Thiết Bị, Nội Dung, Thời Gian, Trạng Thái
+      └─ Màu sắc hàng:
+         ├─ .alarm-error (Red) nếu MucDo = "ERROR"
+         ├─ .alarm-warn (Orange) nếu MucDo = "WARN"
+         └─ .alarm-info (Blue) nếu MucDo = "INFO"
+
+   8) Maintenance Section
+      ├─ @foreach (var maint in Model.BaoTri)
+      ├─ Hiển thị: Thiết Bị, Loại, Ngày BT, Lần Tiếp Theo, Trạng Thái
+      └─ CSS class:
+         ├─ .maintenance-status-ok (Green border) nếu TrangThai = "OK"
+         └─ .maintenance-status-pending (Orange border) nếu khác
+
+
+█████ 6. JAVASCRIPT - BIỂU ĐỒ VÀ EXPORT ██████
+
+A) Chart.js - Thư viện vẽ biểu đồ
+
+   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+
+   Tại sao Chart.js?
+   ├─ Nhẹ (khoảng 60KB)
+   ├─ Không cần jQuery
+   ├─ Hỗ trợ nhiều loại biểu đồ
+   └─ Dễ tùy chỉnh màu sắc
+
+B) Dữ liệu từ Razor sang JavaScript
+
+   const productionData = {
+       ok: @Model.SanXuat.SanLuongOK,        // Ví dụ: 620
+       ng: @Model.SanXuat.SanLuongNG,        // Ví dụ: 50
+       total: @Model.SanXuat.TongSanLuong    // Ví dụ: 1250
+   };
+
+   Razor sẽ compile thành:
+   const productionData = {
+       ok: 620,
+       ng: 50,
+       total: 1250
+   };
+
+C) initializeCharts() - Hàm khởi tạo biểu đồ
+
+   1) Product Quality Chart (Doughnut - Bánh doughnut)
+      
+      document.getElementById('productQualityChart')
+      ├─ Loại: 'doughnut'
+      ├─ Dữ liệu: [OK_count, NG_count]
+      ├─ Màu: [Green, Red]
+      └─ Tính chất:
+         ├─ responsive: true (auto resize)
+         ├─ maintainAspectRatio: false (dùng parent height)
+         └─ Nhãn: tiếng Việt
+
+   2) Product Type Chart (Bar - Cột ngang)
+      
+      ├─ Loại: 'bar'
+      ├─ indexAxis: 'y' (hiển thị ngang thay vì dọc)
+      ├─ Labels: [Loại A, Loại B, Loại C, Loại D]
+      ├─ Dữ liệu: [300, 280, 450, 220]
+      └─ Màu: Tích phân từ [Blue, Green, Orange, Purple]
+
+   3) Device Status Chart (Pie - Bánh tròn)
+      
+      ├─ Loại: 'pie'
+      ├─ Labels: [Đang Chạy, Dừng Lại]
+      ├─ Dữ liệu: [running_count, stopped_count]
+      └─ Màu: [Green, Red]
+
+   4) Alarm Level Chart (Radar - Radar)
+      
+      ├─ Loại: 'radar'
+      ├─ Labels: [ERROR, WARN, INFO]
+      ├─ Dữ liệu: [error_count, warn_count, info_count]
+      └─ Fill: Vùng làm đầy giữa các điểm
+
+   5) Production Trend Chart (Line - Đường)
+      
+      ├─ Loại: 'line'
+      ├─ X-axis (Labels): [00:00, 04:00, 08:00, 12:00, 16:00, 20:00, 24:00]
+      ├─ Dữ liệu:
+      │  ├─ Dataset 1 (Sản Phẩm OK): Màu xanh, line + area fill
+      │  └─ Dataset 2 (Sản Phẩm NG): Màu đỏ, line + area fill
+      └─ Hiệu ứng:
+         ├─ tension: 0.4 (độ cong của đường)
+         ├─ fill: true (tô đầy dưới đường)
+         └─ Hover: Hiển thị tooltip
+
+D) Export Functions
+
+   1) exportPDF() - Export dạng PDF
+      
+      Thư viện: html2pdf.js (từ html2pdf.bundle.min.js)
+      
+      const element = document.querySelector('.dashboard-container');
+      ├─ Lấy toàn bộ HTML của dashboard
+      │
+      const opt = {
+          margin: 10,
+          filename: 'dashboard-yyyy-MM-dd.pdf',
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2 },
+          jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+      };
+      ├─ margin: 10mm lề xung quanh
+      ├─ filename: Tên file
+      ├─ image: Chất lượng cao
+      ├─ scale: 2x để tăng độ rõ
+      └─ jsPDF: A4 dọc
+      │
+      html2pdf().set(opt).from(element).save();
+      └─ Render HTML → Canvas → PDF → Save
+
+   2) exportCSV() - Export dạng CSV
+      
+      ├─ Tạo chuỗi CSV:
+      │  csv += 'Header\n';
+      │  csv += 'Field1,Field2,Field3\n';
+      │
+      ├─ Lấy dữ liệu:
+      │  ├─ Production Summary
+      │  ├─ Device Status (@foreach)
+      │  ├─ Sensor Status (@foreach)
+      │  ├─ Alarms (@foreach)
+      │  └─ Maintenance (@foreach)
+      │
+      └─ Tạo file download:
+         ├─ Data URI: data:text/csv;charset=utf-8,...
+         ├─ Tên file: dashboard-yyyy-MM-dd.csv
+         └─ Nhấp link để download
+
+   3) printDashboard() - In trang
+      
+      window.print();
+      └─ Mở hộp thoại in của trình duyệt
+
+E) Auto-Refresh
+
+   setTimeout(function() {
+       location.reload();
+   }, 30000);
+   
+   ├─ Chờ 30000ms (30 giây)
+   └─ Reload toàn bộ trang để cập nhật dữ liệu
+
+
+█████ 7. LUỒNG DỮ LIỆU TOÀN BỘ ██████
+
+Người dùng truy cập: http://127.0.0.1:5180/
+│
+└─→ HomeController.Index()
+    │
+    ├─→ DashboardService.GetDashboardData()
+    │   │
+    │   ├─→ Database.ProductionRecords
+    │   │   └─ Lấy: Tổng, OK, NG từ ngày hôm nay
+    │   │
+    │   ├─→ Database.Devices
+    │   │   └─ Lấy: Danh sách thiết bị
+    │   │
+    │   ├─→ Database.Sensors
+    │   │   └─ Lấy: Danh sách cảm biến
+    │   │
+    │   ├─→ Database.SensorData
+    │   │   └─ Lấy: Giá trị mới nhất của mỗi cảm biến
+    │   │
+    │   ├─→ Database.AlarmRecords
+    │   │   └─ Lấy: 10 báo động gần nhất
+    │   │
+    │   └─→ Database.MaintenanceRecords
+    │       └─ Lấy: Lịch bảo trì
+    │
+    └─→ Trả lại DashboardMonitoringModel
+        │
+        └─→ View (Index.cshtml) nhận Model
+            │
+            ├─→ Razor compiler chạy:
+            │   ├─ Vòng lặp @foreach
+            │   ├─ Điều kiện @if
+            │   └─ Biến toàn cục @Model
+            │
+            ├─→ HTML + CSS được render
+            │
+            ├─→ JavaScript chạy:
+            │   ├─ Chart.js vẽ 5 biểu đồ
+            │   ├─ Định nghĩa export functions
+            │   └─ Thiết lập auto-refresh
+            │
+            └─→ HTML + Chart.js được gửi tới trình duyệt
+
+
+█████ 8. CÔNG NGHỆ SỬ DỤNG ██████
+
+Backend (Server):
+├─ ASP.NET Core 10 (C#)
+├─ Entity Framework Core (ORM)
+├─ MySQL Database
+├─ Dependency Injection
+├─ MVC Pattern (Model-View-Controller)
+└─ Async/Await (Task-based)
+
+Frontend (Client):
+├─ Razor Templates (HTML + C#)
+├─ CSS3 (Grid, Flexbox, Animation)
+├─ Vanilla JavaScript (không jQuery)
+├─ Chart.js (Biểu đồ)
+├─ html2pdf.js (Export PDF)
+└─ Responsive Design
+
+Database:
+├─ MySQL 8.0
+├─ LINQ Queries (Entity Framework)
+├─ Indexing (NgayGio, MaSp, TrangThai)
+└─ Foreign Keys
+
+
+█████ 9. BEST PRACTICES ĐƯỢC ÁÐUR DỤNG ██████
+
+1. Separation of Concerns (SoC)
+   └─ Models → Services → Controllers → Views
+
+2. Dependency Injection
+   └─ DashboardService được inject vào Controller
+
+3. IDbContextFactory
+   └─ Tránh lỗi thread-safety, connection pooling tự động
+
+4. LINQ to Entities
+   └─ AsNoTracking() để tối ưu query read-only
+   └─ OrderByDescending() để sắp xếp dữ liệu
+
+5. Async Programming
+   └─ Sẵn sàng cho dữ liệu lớn (Task-based)
+
+6. Security
+   └─ Sử dụng Razor @Model để tránh SQL Injection
+   └─ DateTime.Now để ghi nhật ký
+
+7. Responsive Design
+   └─ CSS Grid auto-fit
+   └─ @@media queries cho mobile
+
+8. Performance
+   └─ CDN cho Chart.js (không download local)
+   └─ Auto-refresh 30s (không quá thường xuyên)
+   └─ Take(10) để giới hạn dữ liệu báo động
+
+
+█████ 10. CÁCH MỞ RỘNG DASHBOARD ██████
+
+Thêm Biểu đồ Mới:
+├─ Tạo <canvas id="newChart"></canvas> trong HTML
+├─ Thêm dữ liệu vào const data = {...}
+└─ Tạo hàm chart.newChart trong initializeCharts()
+
+Thêm API Endpoint:
+├─ Thêm [HttpGet("api/...")] trong Controller
+├─ Gọi DashboardService method
+└─ Return Json(data)
+
+Thêm Database Field:
+├─ Thêm property trong Model class
+├─ Tạo Migration: dotnet ef migrations add <name>
+├─ Update Database: dotnet ef database update
+└─ Query trong DashboardService
+
+Thay Đổi Màu Sắc:
+├─ Sửa #4CAF50 (Green) → Màu khác
+├─ Sửa #f44336 (Red) → Màu khác
+├─ Sửa #ff9800 (Orange) → Màu khác
+└─ CSS sẽ auto cập nhật
+
+
+█████ 11. DEBUGGING TIPS ██████
+
+Nếu Chart không hiển thị:
+├─ Mở Developer Tools (F12)
+├─ Console tab: Kiểm tra error
+├─ Elements tab: Kiểm tra <canvas> có render không
+└─ Network tab: Kiểm tra Chart.js CDN load được không
+
+Nếu dữ liệu sai:
+├─ Kiểm tra Database: SELECT * FROM ProductionRecords
+├─ Kiểm tra Model: Console.WriteLine(dashboard.SanXuat.TongSanLuong)
+└─ Kiểm tra API: http://127.0.0.1:5180/api/dashboard/summary (JSON)
+
+Nếu export không work:
+├─ Console: Kiểm tra exportPDF() error
+├─ Kiểm tra html2pdf.js loaded
+└─ Kiểm tra .dashboard-container tồn tại trong DOM
+
+
+█████ 12. ĐỠ PHỨC TẠP & TỐI ƯU ██████
+
+Hiện tại: Simple approach
+├─ Load tất cả dữ liệu 1 lần khi trang load
+├─ Auto-refresh toàn bộ trang mỗi 30s
+└─ Thích hợp cho dashboard nhỏ
+
+Nâng cao (Optional future):
+├─ WebSocket real-time (thay vì reload)
+├─ Partial updates (chỉ update section thay đổi)
+├─ Caching (Redis) cho dữ liệu ít thay đổi
+├─ Pagination cho danh sách dài
+└─ Background jobs cho export lớn
+
+
+╔═══════════════════════════════════════════════════════════════════════════════╗
+║  END OF DETAILED EXPLANATION                                                 ║
+║  Tài liệu này giải thích từng phần của Dashboard HMI                         ║
+║  Dành cho Developer muốn hiểu chi tiết cách hoạt động                        ║
+╚═══════════════════════════════════════════════════════════════════════════════╝

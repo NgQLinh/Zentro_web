@@ -1,0 +1,125 @@
+@model Zentro.Models.BangTaiModel
+@{
+    ViewData["Title"] = "Điều khiển băng tải";
+    var conveyorNumber = ViewData["ConveyorNumber"]?.ToString() ?? "01";
+    var returnPage = conveyorNumber == "02" ? "DieuKhien2" : null;
+    var statusClass = Model.DungKhanCap || Model.LoiMay ? "alarm" : Model.MotorRunning ? "running" : "stopped";
+    var statusText = Model.DungKhanCap ? "E-STOP" : Model.LoiMay ? "ALARM" : Model.MotorRunning ? "RUNNING" : Model.State == BangTaiState.PROCESS ? "PROCESS" : "STOPPED";
+}
+
+<h1 class="hmi-page-title">ĐIỀU KHIỂN BĂNG TẢI</h1>
+
+<div class="hmi-panel">
+    <div class="hmi-panel-title">CHỌN BĂNG TẢI</div>
+    <div class="hmi-btn-row">
+        <a class="hmi-btn @(conveyorNumber == "01" ? "active" : "")" asp-controller="BangTai" asp-action="DieuKhien">BĂNG TẢI 01</a>
+        @if (conveyorNumber == "02" || ViewBag.HasConveyor2 == true)
+        {
+            <a class="hmi-btn @(conveyorNumber == "02" ? "active" : "")" asp-controller="BangTai" asp-action="DieuKhien2">BĂNG TẢI 02</a>
+        }
+    </div>
+</div>
+
+<div class="hmi-panel">
+    <div style="display:flex; justify-content:space-between;">
+        <span>THIẾT BỊ: BĂNG TẢI @conveyorNumber</span>
+        <span class="hmi-online">● @(Model.PlcOnline ? "ONLINE" : "OFFLINE")</span>
+    </div>
+</div>
+
+<div id="conveyor-status" class="hmi-status-bar @statusClass">@statusText</div>
+<div id="conveyor-message" class="hmi-action-message @(Model.DungKhanCap || Model.LoiMay ? "alarm" : "info")" role="status" aria-live="polite">
+    @Model.TrangThai
+</div>
+
+<div class="hmi-panel">
+    <div class="hmi-panel-title">CHẾ ĐỘ</div>
+    <div class="hmi-btn-row">
+        <form asp-controller="BangTai" asp-action="SetAuto" method="post" style="display:inline;">@Html.AntiForgeryToken()<input type="hidden" name="returnPage" value="@returnPage" /><button type="submit" class="hmi-btn @(Model.Mode == BangTaiMode.AUTO ? "active" : "")">AUTO</button></form>
+        <form asp-controller="BangTai" asp-action="SetManual" method="post" style="display:inline;">@Html.AntiForgeryToken()<input type="hidden" name="returnPage" value="@returnPage" /><button type="submit" class="hmi-btn @(Model.Mode == BangTaiMode.MANUAL ? "active" : "")">MANUAL</button></form>
+    </div>
+</div>
+
+<div class="hmi-panel">
+    <div class="hmi-panel-title">ĐIỀU KHIỂN</div>
+    <div class="hmi-btn-row">
+        <form asp-controller="BangTai" asp-action="Start" method="post" style="display:inline;">@Html.AntiForgeryToken()<input type="hidden" name="returnPage" value="@returnPage" /><button type="submit" class="hmi-btn hmi-btn-green">START</button></form>
+        <form asp-controller="BangTai" asp-action="Stop" method="post" class="conveyor-stop-form">@Html.AntiForgeryToken()<input type="hidden" name="returnPage" value="@returnPage" /><select name="lyDoDung" class="hmi-input"><option>Hết nguyên liệu</option><option>Lỗi máy</option><option>Bảo trì</option><option>Chờ sản phẩm</option><option>Chờ người vận hành</option><option>Khác</option></select><input name="ghiChuDung" class="hmi-input" placeholder="Ghi chú dừng máy" /><button type="submit" class="hmi-btn">STOP</button></form>
+        <form asp-controller="BangTai" asp-action="Reset" method="post" style="display:inline;">@Html.AntiForgeryToken()<input type="hidden" name="returnPage" value="@returnPage" /><button type="submit" class="hmi-btn hmi-btn-yellow" data-confirm="Bạn có chắc muốn RESET toàn bộ hệ thống không?">RESET</button></form>
+    </div>
+    <div class="hmi-btn-row">
+        <form asp-controller="BangTai" asp-action="Lui" method="post" style="display:inline;">@Html.AntiForgeryToken()<input type="hidden" name="returnPage" value="@returnPage" /><button type="submit" class="hmi-btn">◀ LÙI</button></form>
+        <form asp-controller="BangTai" asp-action="Tien" method="post" style="display:inline;">@Html.AntiForgeryToken()<input type="hidden" name="returnPage" value="@returnPage" /><button type="submit" class="hmi-btn">TIẾN ▶</button></form>
+        <form asp-controller="BangTai" asp-action="PhatHienSanPham" method="post" style="display:inline;">@Html.AntiForgeryToken()<input type="hidden" name="returnPage" value="@returnPage" /><button type="submit" class="hmi-btn hmi-btn-green">CẢM BIẾN</button></form>
+        <form asp-controller="BangTai" asp-action="EmergencyStop" method="post" style="display:inline;">@Html.AntiForgeryToken()<input type="hidden" name="returnPage" value="@returnPage" /><button type="submit" class="hmi-btn hmi-btn-red" data-confirm="Bạn có chắc muốn kích hoạt E-STOP không?">E-STOP</button></form>
+        <form asp-controller="BangTai" asp-action="BaoLoi" method="post" style="display:inline;">@Html.AntiForgeryToken()<input type="hidden" name="returnPage" value="@returnPage" /><button type="submit" class="hmi-btn hmi-btn-red" data-confirm="Bạn có chắc muốn báo lỗi máy không?">BÁO LỖI</button></form>
+    </div>
+</div>
+
+<div class="hmi-panel">
+    <div class="hmi-panel-title">TỐC ĐỘ</div>
+    <form asp-controller="BangTai" asp-action="SetSpeed" method="post">
+        @Html.AntiForgeryToken()<input type="hidden" name="returnPage" value="@returnPage" />
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+            <span>0%</span>
+            <span class="hmi-speed-display">@Model.TocDo%</span>
+            <span>@Model.TocDoToiDa%</span>
+        </div>
+        <input type="range" name="tocDo" min="0" max="@Model.TocDoToiDa" value="@Model.TocDo" class="hmi-slider"
+               onchange="this.form.requestSubmit()" />
+    </form>
+</div>
+
+<div class="hmi-panel">
+    <div class="hmi-panel-title">TÌNH TRẠNG</div>
+    <ul class="hmi-list">
+        <li>● Động cơ: <span id="motor-status" class="@(Model.MotorRunning ? "hmi-running" : "")">@Model.TrangThaiMotor</span></li>
+        <li>● Hướng quay: <span id="motor-direction">@Model.MotorDirection</span></li>
+        <li>● Bước AUTO: <span id="auto-step">@Model.AutoCycleStep</span></li>
+        <li>● Cảm biến: <span id="sensor-status" class="@(Model.CamBien ? "hmi-running" : "")">@(Model.CamBien ? "ACTIVE" : "IDLE")</span></li>
+        <li>● Kết nối PLC: <span id="plc-status" class="hmi-running">@(Model.PlcOnline ? "ONLINE" : "OFFLINE")</span></li>
+        <li>● Nhiệt độ: <span id="temperature">@Model.NhietDo.ToString("0")</span>°C</li>
+        <li>● Cơ cấu đẩy 1: <span id="cylinder-a">@(Model.XyLanhA ? "ON" : "OFF")</span> | Cơ cấu đẩy 2: <span id="cylinder-b">@(Model.XyLanhB ? "ON" : "OFF")</span></li>
+        <li>● Sản phẩm: <span id="product-count">@Model.SoSanPham</span> / @Model.BufferMax</li>
+    </ul>
+</div>
+
+@if (Model.BaoDay)
+{
+    <div class="hmi-panel">
+        <p class="hmi-warning">⚠ CẢNH BÁO: BUFFER ĐẦY (@Model.BufferMax sản phẩm)</p>
+    </div>
+}
+
+<script>
+    (() => {
+        const updateStatus = async () => {
+            try {
+                const response = await fetch('@Url.Action(conveyorNumber == "02" ? "Status2" : "Status", conveyorNumber == "02" ? "BangTai" : "Home")', { cache: 'no-store' });
+                if (!response.ok) return;
+
+                const state = await response.json();
+                const status = document.getElementById('conveyor-status');
+                status.textContent = state.dungKhanCap ? 'E-STOP' : state.loiMay ? 'ALARM' : state.motorRunning ? 'RUNNING' : 'STOPPED';
+                status.className = `hmi-status-bar ${state.dungKhanCap || state.loiMay ? 'alarm' : state.motorRunning ? 'running' : 'stopped'}`;
+                const message = document.getElementById('conveyor-message');
+                message.textContent = state.trangThai;
+                message.classList.toggle('alarm', state.dungKhanCap || state.loiMay);
+                document.getElementById('motor-status').textContent = state.trangThaiMotor;
+                document.getElementById('motor-direction').textContent = state.motorDirection;
+                document.getElementById('auto-step').textContent = state.autoCycleStep;
+                document.getElementById('sensor-status').textContent = state.camBien ? 'ACTIVE' : 'IDLE';
+                document.getElementById('sensor-status').classList.toggle('hmi-running', state.camBien);
+                document.getElementById('plc-status').textContent = state.plcOnline ? 'ONLINE' : 'OFFLINE';
+                document.getElementById('temperature').textContent = Math.round(state.nhietDo);
+                document.getElementById('cylinder-a').textContent = state.xyLanhA ? 'ON' : 'OFF';
+                document.getElementById('cylinder-b').textContent = state.xyLanhB ? 'ON' : 'OFF';
+                document.getElementById('product-count').textContent = state.soSanPham;
+            } catch {
+                // Giữ nguyên trạng thái đang hiển thị nếu lần cập nhật thất bại.
+            }
+        };
+
+        window.setInterval(updateStatus, 500);
+    })();
+</script>

@@ -1,0 +1,950 @@
+:root {
+  --hmi-bg: #1a2332;
+  --hmi-panel: #243044;
+  --hmi-panel-light: #2d3d54;
+  --hmi-border: #3d5168;
+  --hmi-text: #e8edf4;
+  --hmi-muted: #9fb0c5;
+  --hmi-green: #3ddc84;
+  --hmi-yellow: #f5c542;
+  --hmi-red: #ff5c5c;
+  --hmi-blue: #4da3ff;
+  --hmi-sidebar: #141c28;
+}
+
+* { box-sizing: border-box; }
+
+body.hmi-body {
+  margin: 0;
+  font-family: Consolas, "Courier New", monospace;
+  background: var(--hmi-bg);
+  color: var(--hmi-text);
+  font-size: 14px;
+  overflow: hidden;
+}
+
+.hmi-shell {
+  display: flex;
+  height: 100vh;
+}
+
+.hmi-sidebar {
+  width: 220px;
+  height: 100vh;
+  background: var(--hmi-sidebar);
+  border-right: 2px solid var(--hmi-border);
+  flex-shrink: 0;
+  overflow-y: auto;
+}
+
+.hmi-brand {
+  height: 66px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 700;
+  text-align: center;
+  border-bottom: 2px dashed var(--hmi-border);
+  letter-spacing: 1px;
+}
+
+.zentro-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  margin-right: 8px;
+  border: 2px solid var(--hmi-blue);
+  color: var(--hmi-blue);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.zentro-logo {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  display: block;
+}
+
+.hmi-nav { padding: 10px 0; }
+
+.hmi-nav-item,
+.hmi-nav-sub {
+  display: block;
+  color: var(--hmi-muted);
+  text-decoration: none;
+  padding: 8px 16px;
+  border-left: 3px solid transparent;
+}
+
+.hmi-nav-sub {
+  padding-left: 28px;
+  font-size: 13px;
+}
+
+.hmi-nav-item:hover,
+.hmi-nav-sub:hover,
+.hmi-nav-item.active,
+.hmi-nav-sub.active {
+  color: var(--hmi-text);
+  background: rgba(77, 163, 255, 0.1);
+  border-left-color: var(--hmi-blue);
+}
+
+.hmi-nav-group { margin: 8px 0; }
+
+.hmi-nav-title {
+  display: block;
+  padding: 6px 16px;
+  color: var(--hmi-text);
+  font-weight: 700;
+  font-size: 13px;
+  text-decoration: none;
+  border-left: 3px solid transparent;
+}
+
+.hmi-nav-title:hover {
+  color: var(--hmi-text);
+  background: rgba(77, 163, 255, 0.1);
+  border-left-color: var(--hmi-blue);
+}
+
+.hmi-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.hmi-topbar {
+  height: 66px;
+  flex: 0 0 66px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background: var(--hmi-panel);
+  border-bottom: 2px solid var(--hmi-border);
+}
+
+.hmi-topbar-title {
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.hmi-topbar-right {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.hmi-alarm-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 10px 20px;
+  border-bottom: 2px solid var(--hmi-red);
+  background: rgba(255, 92, 92, 0.16);
+  color: var(--hmi-text);
+  font-size: 17px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.hmi-alarm-banner[hidden] { display: none; }
+.hmi-alarm-banner-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  border: 2px solid var(--hmi-red);
+  color: var(--hmi-red);
+  font-size: 20px;
+}
+.hmi-alarm-banner-message { color: var(--hmi-red); }
+.hmi-alarm-banner-action {
+  margin-left: auto;
+  color: var(--hmi-text);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.hmi-alarm-banner:hover { background: rgba(255, 92, 92, 0.24); }
+
+.hmi-online {
+  color: var(--hmi-green);
+  font-weight: 700;
+}
+
+.hmi-logout {
+  border: 1px dashed var(--hmi-red);
+  background: transparent;
+  color: var(--hmi-red);
+  padding: 5px 8px;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.hmi-logout:hover { background: rgba(255, 92, 92, 0.15); }
+
+.hmi-confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(10, 15, 23, 0.78);
+}
+
+.hmi-confirm-backdrop[hidden] { display: none; }
+.hmi-confirm-dialog { width: min(100%, 420px); background: var(--hmi-panel); border: 2px solid var(--hmi-border); box-shadow: 0 0 0 8px rgba(20, 28, 40, 0.65); }
+.hmi-confirm-title { padding: 12px 16px; border-bottom: 1px dashed var(--hmi-border); color: var(--hmi-yellow); font-weight: 700; }
+.hmi-confirm-dialog p { padding: 8px 16px; min-height: 48px; line-height: 1.5; }
+.hmi-confirm-actions { display: flex; justify-content: flex-end; gap: 10px; padding: 12px 16px 16px; border-top: 1px dashed var(--hmi-border); }
+.pin-dialog-entry { margin: 0 16px; }
+.pin-dialog-input { text-align: center; }
+.pin-dialog-keypad { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; max-width: 252px; margin: 10px auto 0; }
+.pin-dialog-key { min-height: 34px; border: 1px dashed var(--hmi-border); background: var(--hmi-sidebar); color: var(--hmi-text); font: inherit; font-size: 13px; cursor: pointer; }
+.pin-dialog-key:hover { border-color: var(--hmi-blue); color: var(--hmi-blue); background: var(--hmi-panel-light); }
+.pin-dialog-key:active { transform: translateY(1px); }
+.hmi-confirm-actions .hmi-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.login-body { min-height: 100vh; }
+
+.login-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: radial-gradient(circle at 50% 0%, #2d3d54 0, var(--hmi-bg) 46%);
+}
+
+.login-panel {
+  width: min(100%, 480px);
+  padding: 30px;
+  background: rgba(36, 48, 68, 0.96);
+  border: 2px solid var(--hmi-border);
+  box-shadow: 0 0 0 8px rgba(20, 28, 40, 0.7);
+}
+
+.login-brand {
+  color: var(--hmi-blue);
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  border-bottom: 2px dashed var(--hmi-border);
+  padding-bottom: 16px;
+}
+
+.login-brand .zentro-mark { vertical-align: middle; }
+
+.login-status {
+  color: var(--hmi-muted);
+  font-size: 12px;
+  margin: 18px 0 30px;
+}
+
+.login-status-dot { color: var(--hmi-green); }
+.login-status-dot::before { content: "●"; }
+
+.login-panel h1 {
+  margin: 0 0 8px;
+  font-size: 21px;
+  letter-spacing: 1px;
+}
+
+.login-subtitle { color: var(--hmi-muted); margin: 0 0 28px; line-height: 1.5; }
+
+.login-panel label {
+  display: block;
+  color: var(--hmi-muted);
+  font-size: 12px;
+  font-weight: 700;
+  margin: 16px 0 7px;
+}
+
+.login-input {
+  width: 100%;
+  padding: 11px 12px;
+  border: 2px dashed var(--hmi-border);
+  background: var(--hmi-sidebar);
+  color: var(--hmi-text);
+  font: inherit;
+  outline: none;
+}
+
+.login-input:focus { border-color: var(--hmi-blue); }
+.login-submit { width: 100%; margin-top: 24px; }
+.login-error, .login-field-error { color: var(--hmi-red); font-size: 12px; }
+.login-error:empty, .login-field-error:empty { display: none; }
+.login-footer { color: var(--hmi-muted); font-size: 10px; margin-top: 26px; text-align: center; }
+
+.pin-label { text-align: center; }
+.pin-value { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.pin-dots { display: flex; justify-content: center; gap: 16px; margin: 12px 0 24px; }
+.pin-dots span { width: 9px; height: 9px; border-radius: 50%; background: var(--hmi-border); }
+.pin-dots span.filled { background: var(--hmi-blue); box-shadow: 0 0 8px rgba(77, 163, 255, 0.7); }
+.pin-keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 280px; margin: 0 auto; }
+.pin-key { min-height: 42px; border: 1px dashed var(--hmi-border); background: var(--hmi-sidebar); color: var(--hmi-text); font: inherit; font-size: 15px; cursor: pointer; }
+.pin-key:hover { border-color: var(--hmi-blue); color: var(--hmi-blue); background: var(--hmi-panel-light); }
+.pin-key:active { transform: translateY(1px); }
+.pin-key-action { color: var(--hmi-muted); font-size: 11px; }
+.pin-confirm { display: block; margin: 24px auto 0; }
+.pin-confirm:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.hmi-content {
+  padding: 20px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.hmi-page-title {
+  margin: 0 0 16px;
+  font-size: 18px;
+  letter-spacing: 1px;
+  border-bottom: 2px dashed var(--hmi-border);
+  padding-bottom: 8px;
+}
+
+.hmi-panel {
+  background: var(--hmi-panel);
+  border: 2px dashed var(--hmi-border);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.hmi-panel-title {
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: var(--hmi-blue);
+}
+
+.hmi-plc-status-panel { width: 100%; max-width: none; }
+.hmi-plc-overview { display: grid; grid-template-columns: minmax(230px, 1.3fr) minmax(160px, 0.8fr) minmax(140px, 0.7fr) minmax(220px, 1.2fr); align-items: stretch; }
+.hmi-plc-overview-block { min-width: 0; padding: 4px 18px; border-left: 1px solid var(--hmi-border); }
+.hmi-plc-overview-block:first-child { padding-left: 0; border-left: 0; }
+.hmi-plc-primary-content { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 14px; min-height: 92px; }
+.hmi-plc-status-row { display: flex; align-items: center; gap: 10px; min-height: 36px; flex-wrap: wrap; font-size: 18px; }
+.hmi-plc-toggle { min-height: 52px; padding: 14px 24px; font-size: 16px; white-space: nowrap; }
+.hmi-plc-mode, .hmi-plc-metric-label { margin-top: 8px; color: var(--hmi-muted); font-size: 12px; }
+.hmi-plc-metric-value { display: block; margin-top: 7px; color: var(--hmi-text); font-size: 20px; }
+.hmi-plc-metric-detail { display: block; margin-top: 7px; color: var(--hmi-muted); overflow-wrap: anywhere; }
+.hmi-plc-error-block .hmi-plc-metric-detail { max-width: 100%; }
+.hmi-plc-indicator { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--hmi-sidebar); display: inline-block; }
+.hmi-plc-indicator.connected { background: var(--hmi-green); }
+.hmi-plc-indicator.disconnected { background: var(--hmi-red); }
+.hmi-plc-warning { color: var(--hmi-red); font-weight: 700; }
+
+.hmi-statistics-chart-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+.hmi-statistics-chart {
+  min-width: 0;
+  padding: 0 12px;
+}
+.hmi-statistics-chart + .hmi-statistics-chart { border-left: 1px solid var(--hmi-border); }
+.hmi-statistics-chart h2 {
+  margin: 0 0 8px;
+  color: var(--hmi-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+.hmi-statistics-chart-canvas { position: relative; height: 170px; }
+.hmi-statistics-chart-summary {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  margin-top: 6px;
+  font-size: 12px;
+}
+
+.hmi-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.hmi-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.hmi-stat {
+  border: 2px dashed var(--hmi-border);
+  padding: 12px;
+  text-align: center;
+  background: var(--hmi-panel-light);
+}
+
+.hmi-stat-label {
+  color: var(--hmi-muted);
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.hmi-stat-value {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.hmi-stat-sub {
+  color: var(--hmi-muted);
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.hmi-report-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 16px;
+}
+
+.hmi-progress-track {
+  height: 14px;
+  background: var(--hmi-sidebar);
+  border: 1px solid var(--hmi-border);
+  overflow: hidden;
+}
+
+.hmi-progress-fill {
+  height: 100%;
+  background: var(--hmi-green);
+}
+
+.hmi-report-row {
+  display: grid;
+  grid-template-columns: minmax(110px, 1fr) 48px 2fr;
+  gap: 10px;
+  align-items: center;
+  margin: 12px 0;
+}
+
+.hmi-report-bar {
+  height: 12px;
+  background: var(--hmi-sidebar);
+  border: 1px solid var(--hmi-border);
+}
+
+.hmi-report-bar span {
+  display: block;
+  height: 100%;
+  background: var(--hmi-blue);
+}
+
+.hmi-report-legend {
+  display: flex;
+  gap: 18px;
+  color: var(--hmi-muted);
+  font-size: 13px;
+}
+
+.hmi-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));
+  align-items: end;
+  gap: 16px 20px;
+}
+
+.hmi-filter-grid > div { min-width: 0; }
+
+.hmi-filter-grid > .hmi-btn-row {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.hmi-filter-grid label {
+  display: block;
+  color: var(--hmi-muted);
+  font-size: 12px;
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+
+.hmi-trend-chart {
+  min-height: 230px;
+  display: flex;
+  align-items: end;
+  gap: 12px;
+  padding: 20px 10px 0;
+  border-bottom: 1px solid var(--hmi-border);
+}
+
+.hmi-trend-column {
+  height: 190px;
+  flex: 1;
+  min-width: 34px;
+  display: flex;
+  flex-direction: column;
+  justify-content: end;
+  align-items: center;
+  gap: 5px;
+}
+
+.hmi-trend-bar {
+  width: min(38px, 75%);
+  min-height: 8px;
+  background: var(--hmi-blue);
+  border: 1px solid var(--hmi-border);
+}
+
+.hmi-trend-value, .hmi-trend-label {
+  color: var(--hmi-muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+@media print {
+  .hmi-sidebar, .hmi-topbar, .hmi-btn-row, .hmi-report-filters { display: none !important; }
+  .hmi-main { width: 100%; }
+  .hmi-content { padding: 0; }
+  .hmi-panel { break-inside: avoid; }
+}
+
+@media (max-width: 760px) {
+  .hmi-report-grid { grid-template-columns: 1fr; }
+  .hmi-report-row { grid-template-columns: minmax(100px, 1fr) 42px 1.5fr; }
+  .hmi-filter-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 480px) {
+  .hmi-filter-grid { grid-template-columns: 1fr; }
+}
+
+.hmi-running { color: var(--hmi-green); }
+.hmi-warning { color: var(--hmi-yellow); }
+.hmi-error { color: var(--hmi-red); }
+.hmi-info { color: var(--hmi-blue); }
+
+.hmi-flow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 16px 0;
+}
+
+.hmi-flow-box {
+  border: 2px dashed var(--hmi-border);
+  padding: 10px 14px;
+  background: var(--hmi-panel-light);
+  min-width: 120px;
+  text-align: center;
+}
+
+.hmi-flow-box.on { border-color: var(--hmi-green); }
+.hmi-flow-arrow { color: var(--hmi-muted); font-size: 18px; }
+
+.hmi-status-bar {
+  padding: 14px;
+  text-align: center;
+  font-size: 20px;
+  font-weight: 700;
+  border: 2px dashed var(--hmi-border);
+  margin-bottom: 16px;
+}
+
+.hmi-status-bar.running {
+  background: rgba(61, 220, 132, 0.15);
+  border-color: var(--hmi-green);
+  color: var(--hmi-green);
+}
+
+.hmi-status-bar.stopped {
+  background: rgba(159, 176, 197, 0.1);
+  color: var(--hmi-muted);
+}
+
+.hmi-status-bar.alarm {
+  background: rgba(255, 92, 92, 0.15);
+  border-color: var(--hmi-red);
+  color: var(--hmi-red);
+}
+
+.hmi-action-message {
+  padding: 12px 16px;
+  margin: -4px 0 18px;
+  border-left: 4px solid var(--hmi-cyan);
+  background: rgba(77, 196, 255, 0.12);
+  color: var(--hmi-text);
+  font-weight: 600;
+}
+
+.hmi-action-message.alarm {
+  border-left-color: var(--hmi-red);
+  background: rgba(255, 92, 92, 0.15);
+  color: var(--hmi-red);
+}
+
+.hmi-maintenance-notices {
+  display: grid;
+  gap: 5px;
+  margin: 0 20px 14px;
+  padding: 10px 14px;
+  border-left: 4px solid var(--hmi-yellow);
+  background: rgba(255, 196, 77, 0.12);
+  color: var(--hmi-text);
+  font-size: 13px;
+}
+
+.hmi-maintenance-notices[hidden] { display: none; }
+.hmi-maintenance-notice-line { line-height: 1.5; overflow-wrap: anywhere; }
+.hmi-maintenance-notice-line strong { color: var(--hmi-yellow); }
+
+.hmi-oee-layout {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.8fr) 1fr;
+  gap: 24px;
+  align-items: stretch;
+}
+
+.hmi-oee-score {
+  display: grid;
+  place-items: center;
+  padding: 22px;
+  border: 2px solid var(--hmi-blue);
+  background: rgba(77, 163, 255, 0.12);
+}
+
+.hmi-oee-score span,
+.hmi-oee-metrics span {
+  color: var(--hmi-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.hmi-oee-score strong { color: var(--hmi-blue); font-size: 36px; }
+
+.hmi-oee-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.hmi-oee-metrics > div {
+  display: grid;
+  align-content: center;
+  gap: 8px;
+  padding: 16px;
+  border: 1px dashed var(--hmi-border);
+  background: var(--hmi-panel-light);
+}
+
+.hmi-oee-metrics strong { color: var(--hmi-green); font-size: 24px; }
+.hmi-oee-chart { display: flex; align-items: end; gap: 12px; min-height: 190px; overflow-x: auto; padding: 12px 0 4px; }
+.hmi-oee-chart[hidden] { display: none; }
+
+.hmi-btn-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+
+.hmi-btn {
+  display: inline-block;
+  padding: 10px 20px;
+  border: 2px dashed var(--hmi-border);
+  background: var(--hmi-panel-light);
+  color: var(--hmi-text);
+  text-decoration: none;
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.hmi-btn:hover { border-color: var(--hmi-blue); color: var(--hmi-blue); }
+.hmi-btn-green { border-color: var(--hmi-green); color: var(--hmi-green); }
+.hmi-btn-red { border-color: var(--hmi-red); color: var(--hmi-red); }
+.hmi-btn-yellow { border-color: var(--hmi-yellow); color: var(--hmi-yellow); }
+.hmi-btn.active { background: rgba(77, 163, 255, 0.2); border-color: var(--hmi-blue); color: var(--hmi-blue); }
+
+.hmi-confirm {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(4, 10, 18, 0.78);
+}
+
+.hmi-confirm[hidden] { display: none; }
+
+.hmi-confirm-panel {
+  width: min(460px, 100%);
+  padding: 24px;
+  border: 2px solid var(--hmi-border);
+  background: var(--hmi-panel);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+.hmi-confirm-panel h2 {
+  margin: 0 0 14px;
+  color: var(--hmi-yellow);
+  font-size: 20px;
+}
+
+.hmi-confirm-panel p { margin: 0; color: var(--hmi-text); }
+.hmi-confirm-actions { justify-content: flex-end; margin-bottom: 0; }
+
+.hmi-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.hmi-table th,
+.hmi-table td {
+  border: 1px dashed var(--hmi-border);
+  padding: 8px 10px;
+  text-align: left;
+}
+
+.hmi-table th {
+  background: var(--hmi-panel-light);
+  color: var(--hmi-blue);
+}
+
+.hmi-pagination {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--hmi-border);
+}
+
+.hmi-page-jump { display: flex; align-items: center; gap: 8px; margin: 0; }
+.hmi-page-jump label { margin: 0; color: var(--hmi-muted); white-space: nowrap; }
+.hmi-page-input { width: 76px; min-height: 34px; padding: 5px 7px; }
+.hmi-pagination .hmi-btn { min-width: 64px; padding: 6px 9px; text-align: center; text-decoration: none; }
+.hmi-pagination .is-disabled { opacity: 0.4; cursor: default; }
+
+.hmi-table-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.maintenance-table {
+  table-layout: fixed;
+  min-width: 860px;
+}
+
+.maintenance-current-panel,
+.maintenance-history-panel { padding: 10px; margin-bottom: 10px; }
+.maintenance-current-panel .hmi-table th,
+.maintenance-current-panel .hmi-table td,
+.maintenance-history-table th,
+.maintenance-history-table td { padding: 5px 7px; font-size: 12px; }
+.maintenance-table .maintenance-device { width: 9%; }
+.maintenance-table .maintenance-type { width: 13%; }
+.maintenance-table .maintenance-date { width: 13%; white-space: nowrap; }
+.maintenance-table .maintenance-status { width: 19%; overflow-wrap: anywhere; }
+.maintenance-table .maintenance-person { width: 13%; overflow-wrap: anywhere; }
+.maintenance-table .maintenance-note {
+  width: 14%;
+  overflow-wrap: anywhere;
+}
+.maintenance-table td:last-child { width: 8%; white-space: nowrap; }
+.maintenance-table td:last-child .hmi-btn { padding: 3px 7px; font-size: 11px; }
+.maintenance-history-scroll { max-height: 190px; overflow: auto; }
+.maintenance-history-table thead { position: sticky; top: 0; z-index: 1; }
+
+.hmi-list { list-style: none; padding: 0; margin: 0; }
+.hmi-list li { padding: 6px 0; border-bottom: 1px dashed var(--hmi-border); }
+
+.hmi-split {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 16px;
+}
+
+.hmi-config-stack {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 14px;
+  min-width: 0;
+}
+
+.hmi-settings-layout {
+  grid-template-columns: 220px minmax(0, 1fr);
+  align-items: start;
+  gap: 14px;
+}
+
+.hmi-settings-devices {
+  margin-bottom: 0;
+  padding: 14px;
+}
+
+.hmi-settings-devices .hmi-list a {
+  display: block;
+  padding: 8px 6px;
+  color: var(--hmi-muted);
+  text-decoration: none;
+}
+
+.hmi-settings-devices .hmi-list a:hover {
+  color: var(--hmi-text);
+  background: rgba(77, 163, 255, 0.1);
+}
+
+.hmi-settings-card {
+  height: 100%;
+  margin-bottom: 0;
+  padding: 14px;
+}
+
+.hmi-settings-card .hmi-panel-title {
+  min-height: 34px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--hmi-border);
+}
+
+.hmi-settings-card .hmi-form-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 104px 18px;
+  gap: 8px;
+  min-height: 42px;
+  padding: 6px 0;
+}
+
+.hmi-settings-card .hmi-form-row label {
+  font-size: 12px;
+}
+
+.hmi-settings-card .hmi-input {
+  width: 100%;
+  min-width: 0;
+  min-height: 32px;
+  padding: 5px 8px;
+  text-align: center;
+}
+
+.hmi-unit-input {
+  position: relative;
+  display: inline-block;
+  width: 104px;
+}
+
+.hmi-unit-input .hmi-input {
+  width: 100%;
+  padding-right: 28px;
+}
+
+.hmi-unit-input > span {
+  position: absolute;
+  top: 50%;
+  right: 9px;
+  transform: translateY(-50%);
+  color: var(--hmi-muted);
+  pointer-events: none;
+}
+
+.hmi-settings-actions {
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--hmi-border);
+}
+
+.hmi-form-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px dashed var(--hmi-border);
+}
+
+.hmi-form-row label { color: var(--hmi-muted); }
+
+.hmi-input {
+  background: var(--hmi-panel-light);
+  border: 2px dashed var(--hmi-border);
+  color: var(--hmi-text);
+  padding: 6px 10px;
+  font-family: inherit;
+  width: 80px;
+  text-align: center;
+}
+
+.hmi-filter-grid .hmi-input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  text-align: left;
+}
+
+.conveyor-stop-form {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.conveyor-stop-form select.hmi-input {
+  width: 180px;
+}
+
+.conveyor-stop-form input.hmi-input {
+  width: 220px;
+}
+
+.hmi-slider {
+  width: 100%;
+  accent-color: var(--hmi-blue);
+}
+
+.hmi-speed-display {
+  text-align: center;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--hmi-blue);
+  margin: 8px 0;
+}
+
+.hmi-badge-error { color: var(--hmi-red); font-weight: 700; }
+.hmi-badge-warn { color: var(--hmi-yellow); font-weight: 700; }
+.hmi-badge-info { color: var(--hmi-blue); font-weight: 700; }
+
+.hmi-dot-on { color: var(--hmi-green); }
+.hmi-dot-off { color: var(--hmi-muted); }
+
+@media (max-width: 900px) {
+  body.hmi-body { overflow: auto; }
+  .hmi-shell { height: auto; min-height: 100vh; flex-direction: column; }
+  .hmi-sidebar { width: 100%; height: auto; max-height: none; overflow: visible; }
+  .hmi-content { overflow: visible; }
+  .hmi-grid-4, .hmi-grid-3 { grid-template-columns: 1fr 1fr; }
+  .hmi-plc-overview { grid-template-columns: 1fr 1fr; row-gap: 18px; }
+  .hmi-plc-overview-block:nth-child(3) { border-left: 0; padding-left: 0; }
+  .hmi-split { grid-template-columns: 1fr; }
+  .hmi-config-stack { grid-template-columns: 1fr; }
+  .hmi-settings-devices .hmi-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 4px 12px; }
+}
+
+@media (max-width: 560px) {
+  .hmi-plc-overview { grid-template-columns: 1fr; }
+  .hmi-plc-overview-block { padding: 12px 0 0; border-left: 0; border-top: 1px solid var(--hmi-border); }
+  .hmi-plc-overview-block:first-child { padding-top: 0; border-top: 0; }
+  .hmi-plc-primary-content { grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+  .hmi-plc-toggle { padding: 12px 14px; font-size: 14px; }
+  .hmi-statistics-chart-grid { grid-template-columns: 1fr; }
+  .hmi-statistics-chart { padding: 8px 0; }
+  .hmi-statistics-chart + .hmi-statistics-chart { border-left: 0; border-top: 1px solid var(--hmi-border); }
+  .hmi-statistics-chart-canvas { height: 150px; }
+  .hmi-alarm-banner { gap: 9px; padding: 9px 12px; font-size: 15px; }
+  .hmi-alarm-banner-action { font-size: 10px; }
+}

@@ -1,0 +1,23 @@
+@model Zentro.Models.BangTaiModel
+@{
+    ViewData["Title"] = "Lô sản xuất";
+}
+
+<h1 class="hmi-page-title">QUẢN LÝ LÔ SẢN XUẤT</h1>
+<div class="hmi-panel">
+    <div class="hmi-panel-title">LÔ ĐANG CHẠY</div>
+    <div class="hmi-form-row"><label>MÃ LÔ</label><strong class="hmi-info">@Model.LoSanXuat</strong></div>
+    <div class="hmi-form-row"><label>SẢN PHẨM</label><span>@Model.SanPhamDangSx</span></div>
+    <div class="hmi-form-row"><label>TRẠNG THÁI</label><strong class="@(Model.MotorRunning ? "hmi-running" : "hmi-warning")">@(Model.MotorRunning ? "ĐANG CHẠY" : "TẠM DỪNG")</strong></div>
+    <div class="hmi-form-row"><label>TIẾN ĐỘ</label><strong>@Model.SoSanPham / @Model.KeHoach (@(Model.KeHoach == 0 ? 0 : Model.SoSanPham * 100 / Model.KeHoach)%)</strong></div>
+</div>
+<div class="hmi-panel">
+    <div class="hmi-panel-title">KẾ HOẠCH LÔ</div>
+    <div class="hmi-grid-3"><div class="hmi-stat"><div class="hmi-stat-label">KẾ HOẠCH</div><div class="hmi-stat-value">@Model.KeHoach</div></div><div class="hmi-stat"><div class="hmi-stat-label">ĐÃ SẢN XUẤT</div><div class="hmi-stat-value hmi-running">@Model.SoSanPham</div></div><div class="hmi-stat"><div class="hmi-stat-label">CÒN LẠI</div><div class="hmi-stat-value hmi-info">@Model.ConLai</div></div></div>
+    <div class="hmi-btn-row">
+        <form asp-controller="BangTai" asp-action="Start" method="post" style="display:inline;"><input type="hidden" name="returnPage" value="Index" /><button type="submit" class="hmi-btn hmi-btn-green">START LÔ</button></form>
+        <form asp-controller="BangTai" asp-action="Stop" method="post" style="display:inline;"><input type="hidden" name="returnPage" value="Index" /><button type="submit" class="hmi-btn">TẠM DỪNG LÔ</button></form>
+        <form asp-controller="BangTai" asp-action="Reset" method="post" style="display:inline;"><button type="submit" class="hmi-btn hmi-btn-yellow">RESET LÔ</button></form>
+    </div>
+</div>
+<div class="hmi-panel"><div class="hmi-panel-title">TÓM TẮT LINH KIỆN TRONG LÔ</div><table class="hmi-table"><thead><tr>@foreach (var loai in BangTaiModel.LoaiLinhKien) { <th>@loai.ToUpperInvariant()</th> }<th>LỖI</th><th>TỔNG</th></tr></thead><tbody><tr>@foreach (var loai in BangTaiModel.LoaiLinhKien) { <td class="hmi-info">@Model.SoLuongTheoLoai[loai]</td> }<td class="hmi-warning">@Model.SoLoi</td><td>@Model.SoSanPham</td></tr></tbody></table></div>

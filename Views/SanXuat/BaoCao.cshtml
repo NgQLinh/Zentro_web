@@ -1,0 +1,231 @@
+@model Zentro.Models.ReportFilterViewModel
+@{
+    ViewData["Title"] = "Báo cáo sản xuất";
+}
+
+<h1 class="hmi-page-title">BÁO CÁO SẢN XUẤT</h1>
+
+<div class="hmi-panel hmi-report-filters">
+    <div class="hmi-panel-title">BỘ LỌC BÁO CÁO</div>
+    <form asp-action="BaoCao" method="get">
+        <div class="hmi-filter-grid">
+            <div><label for="fromDate">THỜI GIAN TỪ</label><input id="fromDate" class="hmi-input" type="date" name="FromDate" value="@Model.FromDate.ToString("yyyy-MM-dd")" /></div>
+            <div><label for="toDate">ĐẾN NGÀY</label><input id="toDate" class="hmi-input" type="date" name="ToDate" value="@Model.ToDate.ToString("yyyy-MM-dd")" /></div>
+            <div><label for="ca">CA</label><select id="ca" class="hmi-input" name="Ca">@foreach (var item in Model.CaOptions) { <option value="@item" selected="@(item == Model.Ca ? "selected" : null)">@item</option> }</select></div>
+            <div><label for="lot">LOT</label><select id="lot" class="hmi-input" name="Lot"><option value="Tất cả" selected="@(Model.Lot == "Tất cả" ? "selected" : null)">Tất cả</option>@foreach (var item in Model.LotOptions) { <option value="@item" selected="@(item == Model.Lot ? "selected" : null)">@item</option> }</select></div>
+            <div><label for="product">SẢN PHẨM</label><select id="product" class="hmi-input" name="Product"><option value="Tất cả" selected="@(Model.Product == "Tất cả" ? "selected" : null)">Tất cả</option>@foreach (var item in Model.ProductOptions) { <option value="@item" selected="@(item == Model.Product ? "selected" : null)">@item</option> }</select></div>
+            <div><label for="device">THIẾT BỊ</label><select id="device" class="hmi-input" name="Device">@foreach (var item in Model.DeviceOptions) { <option value="@item" selected="@(item == Model.Device ? "selected" : null)">@item</option> }</select></div>
+        </div>
+        <div class="hmi-btn-row">
+            <button class="hmi-btn hmi-btn-green" type="submit">LỌC BÁO CÁO</button>
+            <a class="hmi-btn" asp-action="ExportExcel" asp-route-FromDate="@Model.FromDate.ToString("yyyy-MM-dd")" asp-route-ToDate="@Model.ToDate.ToString("yyyy-MM-dd")" asp-route-Device="@Model.Device" asp-route-Ca="@Model.Ca" asp-route-Lot="@Model.Lot" asp-route-Product="@Model.Product">XUẤT EXCEL</a>
+            <button class="hmi-btn hmi-btn-yellow" type="button" onclick="window.print()">XUẤT PDF</button>
+        </div>
+    </form>
+</div>
+
+@if (Model.LotSummary != null)
+{
+    <div class="hmi-panel">
+        <div class="hmi-panel-title">BÁO CÁO LOT: @Model.LotSummary.Lot</div>
+        <div class="hmi-grid-4">
+            <div class="hmi-stat"><div class="hmi-stat-label">MÃ SẢN PHẨM</div><div class="hmi-stat-value">@Model.LotSummary.MaSp</div></div>
+            <div class="hmi-stat"><div class="hmi-stat-label">KẾ HOẠCH</div><div class="hmi-stat-value">@Model.LotSummary.KeHoach</div></div>
+            <div class="hmi-stat"><div class="hmi-stat-label">ĐÃ SẢN XUẤT</div><div class="hmi-stat-value">@Model.LotSummary.DaSanXuat</div></div>
+            <div class="hmi-stat"><div class="hmi-stat-label">TỶ LỆ ĐẠT</div><div class="hmi-stat-value hmi-running">@Model.LotSummary.TyLeDat.ToString("F2")%</div></div>
+        </div>
+        <div class="hmi-form-row"><label>OK / NG</label><span class="hmi-running">@Model.LotSummary.Ok</span> / <span class="hmi-warning">@Model.LotSummary.Ng</span></div>
+        <div class="hmi-form-row"><label>THỜI GIAN</label><span>@(Model.LotSummary.BatDau?.ToString("dd/MM/yyyy HH:mm") ?? "N/A") → @(Model.LotSummary.KetThuc?.ToString("dd/MM/yyyy HH:mm") ?? "Đang chạy")</span></div>
+        <div class="hmi-form-row"><label>THEO LINE</label><span>@string.Join(" | ", Model.LotSummary.SanLuongTheoLine.Select(item => $"{item.Key}: {item.Value}"))</span></div>
+    </div>
+}
+
+<div class="hmi-panel">
+    <div class="hmi-panel-title">TỔNG HỢP THEO BỘ LỌC</div>
+    <div class="hmi-grid-4">
+        <div class="hmi-stat"><div class="hmi-stat-label">TOTAL</div><div class="hmi-stat-value hmi-info">@Model.Summary.Total</div></div>
+        <div class="hmi-stat"><div class="hmi-stat-label">OK</div><div class="hmi-stat-value hmi-running">@Model.Summary.Ok</div></div>
+        <div class="hmi-stat"><div class="hmi-stat-label">NG</div><div class="hmi-stat-value hmi-warning">@Model.Summary.Ng</div></div>
+        <div class="hmi-stat"><div class="hmi-stat-label">YIELD</div><div class="hmi-stat-value hmi-info">@Model.Summary.YieldPercent%</div></div>
+    </div>
+</div>
+
+<div class="hmi-panel">
+    <div class="hmi-panel-title">BIỂU ĐỒ THEO BỘ LỌC</div>
+    <div class="hmi-statistics-chart-grid">
+        <section class="hmi-statistics-chart">
+            <h2>CHẤT LƯỢNG SẢN PHẨM</h2>
+            @if (Model.Summary.Total == 0)
+            {
+                <div class="hmi-empty">Không có sản lượng trong khoảng đã chọn.</div>
+            }
+            else
+            {
+                <div class="hmi-statistics-chart-canvas"><canvas id="reportQualityChart" aria-label="Biểu đồ sản phẩm OK và NG theo bộ lọc"></canvas></div>
+                <div class="hmi-statistics-chart-summary"><span class="hmi-running">OK @Model.Summary.Ok</span><span class="hmi-warning">NG @Model.Summary.Ng</span></div>
+            }
+        </section>
+        <section class="hmi-statistics-chart">
+            <h2>SẢN LƯỢNG THEO THIẾT BỊ</h2>
+            @if (Model.ProductionByDevice.Count == 0)
+            {
+                <div class="hmi-empty">Không có dữ liệu thiết bị trong khoảng đã chọn.</div>
+            }
+            else
+            {
+                <div class="hmi-statistics-chart-canvas"><canvas id="reportDeviceChart" aria-label="Biểu đồ sản lượng theo thiết bị"></canvas></div>
+            }
+        </section>
+    </div>
+</div>
+
+<div class="hmi-report-grid">
+    <div class="hmi-panel">
+        <div class="hmi-panel-title">HIỆU SUẤT MÁY</div>
+        <div class="hmi-form-row"><label>RUN TIME</label><strong class="hmi-running">@Model.Summary.RunTime.ToString(@"hh\:mm\:ss")</strong></div>
+        <div class="hmi-form-row"><label>STOP TIME</label><strong>@Model.Summary.StopTime.ToString(@"hh\:mm\:ss")</strong></div>
+        <div class="hmi-form-row"><label>DOWNTIME</label><strong class="hmi-warning">@Model.Summary.DowntimePercent%</strong></div>
+        <div class="hmi-form-row"><label>CYCLE TIME</label><strong>@Model.Summary.CycleTimeSeconds.ToString("0.0") s/SP</strong></div>
+    </div>
+    <div class="hmi-panel">
+        <div class="hmi-panel-title">ALARM TRONG KHOẢNG CHỌN</div>
+        <div class="hmi-stat-value hmi-warning">@Model.Summary.AlarmCount</div>
+        <p class="hmi-stat-sub">Sự kiện alarm được ghi nhận</p>
+    </div>
+</div>
+
+<div class="hmi-panel">
+    <div class="hmi-panel-title">CHI TIẾT SẢN LƯỢNG / OK / NG</div>
+    <table class="hmi-table">
+        <thead><tr><th>THIẾT BỊ</th><th>MÃ SP</th><th>SẢN PHẨM</th><th>KẾT QUẢ</th><th>CYCLE TIME</th><th>NGÀY GIỜ</th><th>CA</th><th>LOT</th></tr></thead>
+        <tbody>
+        @if (Model.ProductionRows.Count == 0) { <tr><td colspan="8">Không có dữ liệu theo bộ lọc.</td></tr> }
+        @foreach (var row in Model.ProductionRows)
+        {
+            <tr><td>@row.ThietBi</td><td>@row.MaSp</td><td>@row.Loai</td><td class="@(row.KetQua == "Lỗi" ? "hmi-error" : "hmi-running")">@row.KetQua</td><td>@row.CycleTimeSeconds.ToString("0.0")s</td><td>@row.NgayGio.ToString("dd/MM/yyyy HH:mm:ss")</td><td>@row.Ca</td><td>@row.Lot</td></tr>
+        }
+        </tbody>
+    </table>
+    <nav class="hmi-pagination" aria-label="Phân trang sản lượng">
+        <span>TRANG <strong>@Model.ProductionPage</strong> / @Model.ProductionTotalPages</span>
+        @if (Model.ProductionPage > 1)
+        {
+            <a class="hmi-btn" asp-action="BaoCao" asp-route-FromDate="@Model.FromDate.ToString("yyyy-MM-dd")" asp-route-ToDate="@Model.ToDate.ToString("yyyy-MM-dd")" asp-route-Ca="@Model.Ca" asp-route-Lot="@Model.Lot" asp-route-Product="@Model.Product" asp-route-Device="@Model.Device" asp-route-ProductionPage="@(Model.ProductionPage - 1)" asp-route-AlarmPage="@Model.AlarmPage">TRƯỚC</a>
+        }
+        else
+        {
+            <span class="hmi-btn is-disabled" aria-disabled="true">TRƯỚC</span>
+        }
+        <form asp-action="BaoCao" method="get" class="hmi-page-jump">
+            <input type="hidden" name="FromDate" value="@Model.FromDate.ToString("yyyy-MM-dd")" />
+            <input type="hidden" name="ToDate" value="@Model.ToDate.ToString("yyyy-MM-dd")" />
+            <input type="hidden" name="Ca" value="@Model.Ca" />
+            <input type="hidden" name="Lot" value="@Model.Lot" />
+            <input type="hidden" name="Product" value="@Model.Product" />
+            <input type="hidden" name="Device" value="@Model.Device" />
+            <input type="hidden" name="AlarmPage" value="@Model.AlarmPage" />
+            <label for="production-page">ĐẾN TRANG</label>
+            <input id="production-page" class="hmi-input hmi-page-input" type="number" name="ProductionPage" min="1" max="@Model.ProductionTotalPages" value="@Model.ProductionPage" />
+            <button class="hmi-btn hmi-btn-green" type="submit">ĐI</button>
+        </form>
+        @if (Model.ProductionPage < Model.ProductionTotalPages)
+        {
+            <a class="hmi-btn" asp-action="BaoCao" asp-route-FromDate="@Model.FromDate.ToString("yyyy-MM-dd")" asp-route-ToDate="@Model.ToDate.ToString("yyyy-MM-dd")" asp-route-Ca="@Model.Ca" asp-route-Lot="@Model.Lot" asp-route-Product="@Model.Product" asp-route-Device="@Model.Device" asp-route-ProductionPage="@(Model.ProductionPage + 1)" asp-route-AlarmPage="@Model.AlarmPage">SAU</a>
+        }
+        else
+        {
+            <span class="hmi-btn is-disabled" aria-disabled="true">SAU</span>
+        }
+    </nav>
+</div>
+
+<div class="hmi-panel">
+    <div class="hmi-panel-title">DANH SÁCH ALARM</div>
+    <table class="hmi-table">
+        <thead><tr><th>MỨC ĐỘ</th><th>THIẾT BỊ</th><th>NỘI DUNG</th><th>THỜI GIAN</th><th>THỜI LƯỢNG</th><th>TRẠNG THÁI</th></tr></thead>
+        <tbody>
+        @if (Model.Alarms.Count == 0) { <tr><td colspan="6">Không có alarm theo khoảng thời gian.</td></tr> }
+        @foreach (var alarm in Model.Alarms)
+        {
+            <tr><td class="@(alarm.MucDo == "ERROR" ? "hmi-error" : "hmi-warning")">@alarm.MucDo</td><td>@alarm.ThietBi</td><td>@alarm.NoiDung</td><td>@alarm.ThoiGian</td><td>@alarm.ThoiLuong</td><td>@alarm.TrangThai</td></tr>
+        }
+        </tbody>
+    </table>
+    <nav class="hmi-pagination" aria-label="Phân trang alarm">
+        <span>TRANG <strong>@Model.AlarmPage</strong> / @Model.AlarmTotalPages</span>
+        @if (Model.AlarmPage > 1)
+        {
+            <a class="hmi-btn" asp-action="BaoCao" asp-route-FromDate="@Model.FromDate.ToString("yyyy-MM-dd")" asp-route-ToDate="@Model.ToDate.ToString("yyyy-MM-dd")" asp-route-Ca="@Model.Ca" asp-route-Lot="@Model.Lot" asp-route-Product="@Model.Product" asp-route-Device="@Model.Device" asp-route-ProductionPage="@Model.ProductionPage" asp-route-AlarmPage="@(Model.AlarmPage - 1)">TRƯỚC</a>
+        }
+        else
+        {
+            <span class="hmi-btn is-disabled" aria-disabled="true">TRƯỚC</span>
+        }
+        <form asp-action="BaoCao" method="get" class="hmi-page-jump">
+            <input type="hidden" name="FromDate" value="@Model.FromDate.ToString("yyyy-MM-dd")" />
+            <input type="hidden" name="ToDate" value="@Model.ToDate.ToString("yyyy-MM-dd")" />
+            <input type="hidden" name="Ca" value="@Model.Ca" />
+            <input type="hidden" name="Lot" value="@Model.Lot" />
+            <input type="hidden" name="Product" value="@Model.Product" />
+            <input type="hidden" name="Device" value="@Model.Device" />
+            <input type="hidden" name="ProductionPage" value="@Model.ProductionPage" />
+            <label for="alarm-page">ĐẾN TRANG</label>
+            <input id="alarm-page" class="hmi-input hmi-page-input" type="number" name="AlarmPage" min="1" max="@Model.AlarmTotalPages" value="@Model.AlarmPage" />
+            <button class="hmi-btn hmi-btn-green" type="submit">ĐI</button>
+        </form>
+        @if (Model.AlarmPage < Model.AlarmTotalPages)
+        {
+            <a class="hmi-btn" asp-action="BaoCao" asp-route-FromDate="@Model.FromDate.ToString("yyyy-MM-dd")" asp-route-ToDate="@Model.ToDate.ToString("yyyy-MM-dd")" asp-route-Ca="@Model.Ca" asp-route-Lot="@Model.Lot" asp-route-Product="@Model.Product" asp-route-Device="@Model.Device" asp-route-ProductionPage="@Model.ProductionPage" asp-route-AlarmPage="@(Model.AlarmPage + 1)">SAU</a>
+        }
+        else
+        {
+            <span class="hmi-btn is-disabled" aria-disabled="true">SAU</span>
+        }
+    </nav>
+</div>
+
+@section Scripts {
+    @if (Model.Summary.Total > 0)
+    {
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+        <script>
+            const reportChartLegend = {
+                position: 'bottom',
+                labels: { color: '#e8edf4', boxWidth: 10, boxHeight: 10, padding: 12, font: { size: 11 } }
+            };
+
+            new Chart(document.getElementById('reportQualityChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['OK', 'NG'],
+                    datasets: [{ data: [@Model.Summary.Ok, @Model.Summary.Ng], backgroundColor: ['#3ddc84', '#ff5c5c'], borderColor: '#243044', borderWidth: 3, hoverOffset: 4 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '66%', plugins: { legend: reportChartLegend } }
+            });
+
+            const deviceLabels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ProductionByDevice.Keys));
+            const deviceCounts = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ProductionByDevice.Values));
+            new Chart(document.getElementById('reportDeviceChart'), {
+                type: 'bar',
+                data: {
+                    labels: deviceLabels,
+                    datasets: [{ label: 'Sản lượng', data: deviceCounts, backgroundColor: '#4da3ff', borderColor: '#4da3ff', borderWidth: 1, barThickness: 24 }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { beginAtZero: true, ticks: { precision: 0, color: '#9fb0c5' }, grid: { color: 'rgba(159, 176, 197, 0.15)' } },
+                        y: { ticks: { color: '#e8edf4' }, grid: { display: false } }
+                    }
+                }
+            });
+        </script>
+    }
+    <script>
+        window.addEventListener('beforeprint', () => document.body.classList.add('hmi-printing'));
+        window.addEventListener('afterprint', () => document.body.classList.remove('hmi-printing'));
+    </script>
+}

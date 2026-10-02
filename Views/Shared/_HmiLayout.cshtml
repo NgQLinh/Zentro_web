@@ -1,0 +1,192 @@
+@inject NhaMayDataService NhaMayData
+@{
+    var maintenanceNotifications = User.IsInRole("User")
+        ? NhaMayData.GetMaintenance().Where(item => item.TrangThai is "ĐÃ LÊN LỊCH" or "ĐANG BẢO TRÌ").ToList()
+        : new List<MaintenanceItem>();
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ZENTRO – HỆ THỐNG QUẢN LÝ SẢN XUẤT</title>
+    <link rel="icon" type="image/svg+xml" href="~/images/zentro-logo.svg" />
+    <link rel="stylesheet" href="~/css/hmi.css" asp-append-version="true" />
+</head>
+<body class="hmi-body">
+    <div class="hmi-shell">
+        <aside class="hmi-sidebar">
+            <div class="hmi-brand"><img class="zentro-logo" src="~/images/zentro-logo.svg" alt="Zentro" /><span>ZENTRO</span></div>
+            <nav class="hmi-nav">
+                <a class="hmi-nav-item @(ViewData["Menu"]?.ToString() == "dashboard" ? "active" : "")" asp-controller="Home" asp-action="Index">🏠 Tổng quan</a>
+
+                @if (User.IsInRole("User") || User.IsInRole("Admin"))
+                {
+                    <div class="hmi-nav-group">
+                        <div class="hmi-nav-title">⚙ Điều khiển</div>
+                        <a class="hmi-nav-sub @(ViewData["Menu"]?.ToString() == "bangtai" ? "active" : "")" asp-controller="BangTai" asp-action="DieuKhien">Băng tải</a>
+                        <a class="hmi-nav-sub @(ViewData["Menu"]?.ToString() == "phanloai" ? "active" : "")" asp-controller="BangTai" asp-action="PhanLoaiPage">Phân loại</a>
+                        <a class="hmi-nav-sub @(ViewData["Menu"]?.ToString() == "giacong" ? "active" : "")" asp-controller="GiaCong" asp-action="Index">Gia công</a>
+                    </div>
+                }
+
+                @if (User.IsInRole("Admin"))
+                {
+                    <div class="hmi-nav-group">
+                        <a class="hmi-nav-title" asp-controller="May" asp-action="Index">🔧 Thiết bị</a>
+                        <a class="hmi-nav-sub @(ViewData["Menu"]?.ToString() == "may" ? "active" : "")" asp-controller="May" asp-action="Index">Máy gia công</a>
+                        <a class="hmi-nav-sub @(ViewData["Menu"]?.ToString() == "cambien" ? "active" : "")" asp-controller="CamBien" asp-action="Index">Cảm biến</a>
+                    </div>
+                }
+
+                @if (User.IsInRole("Admin"))
+                {
+                    <div class="hmi-nav-group">
+                        <a class="hmi-nav-title" asp-controller="SanXuat" asp-action="Index">📦 Sản xuất</a>
+                        <a class="hmi-nav-sub @(ViewData["Menu"]?.ToString() == "parts" ? "active" : "")" asp-controller="Part" asp-action="Index">Mã SP / Index</a>
+                        <a class="hmi-nav-sub @(ViewData["Menu"]?.ToString() == "sanxuat" ? "active" : "")" asp-controller="SanXuat" asp-action="Index">Sản phẩm</a>
+                        <a class="hmi-nav-sub @(ViewData["Menu"]?.ToString() == "thongke" ? "active" : "")" asp-controller="SanXuat" asp-action="ThongKe">Thống kê</a>
+                        <a class="hmi-nav-sub @(ViewData["Menu"]?.ToString() == "baocao" ? "active" : "")" asp-controller="SanXuat" asp-action="BaoCao">Báo cáo chi tiết</a>
+                        <a class="hmi-nav-sub @(ViewData["Menu"]?.ToString() == "kpi" ? "active" : "")" asp-controller="SanXuat" asp-action="Kpi">Báo cáo KPI</a>
+                    </div>
+                }
+
+                @if (User.IsInRole("Admin") || User.IsInRole("Maintenance"))
+                {
+                    <a class="hmi-nav-item @(ViewData["Menu"]?.ToString() == "baodong" ? "active" : "")" asp-controller="BaoDong" asp-action="Index">⚠ Báo động <span id="alarm-badge" class="hmi-alarm-badge" hidden></span></a>
+                }
+                @if (User.IsInRole("Admin") || User.IsInRole("Maintenance"))
+                {
+                    <a class="hmi-nav-item @(ViewData["Menu"]?.ToString() == "baotri" ? "active" : "")" asp-controller="BaoTri" asp-action="Index">🛠 Bảo trì</a>
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a class="hmi-nav-item @(ViewData["Menu"]?.ToString() == "nhatky" ? "active" : "")" asp-controller="NhatKy" asp-action="Index">📋 Nhật ký</a>
+                    }
+                }
+                @if (User.IsInRole("Admin"))
+                {
+                    <a class="hmi-nav-item @(ViewData["Menu"]?.ToString() == "taikhoan" ? "active" : "")" asp-controller="TaiKhoan" asp-action="Index">👤 Tài khoản</a>
+                    <a class="hmi-nav-item @(ViewData["Menu"]?.ToString() == "caidat" ? "active" : "")" asp-controller="CaiDat" asp-action="Index">⚙ Cài đặt</a>
+                }
+            </nav>
+        </aside>
+
+        <div class="hmi-main">
+            <header class="hmi-topbar">
+                <div class="hmi-topbar-title">ZENTRO – HỆ THỐNG QUẢN LÝ SẢN XUẤT</div>
+                <div class="hmi-topbar-right">
+                    <span>@(User.Identity?.Name ?? "User") (@(User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "-"))</span>
+                    <span class="hmi-online">● ONLINE</span>
+                    <form asp-controller="Account" asp-action="Logout" method="post">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="hmi-logout">ĐĂNG XUẤT</button>
+                    </form>
+                </div>
+            </header>
+
+            <a id="hmi-alarm-banner" class="hmi-alarm-banner" asp-controller="BaoDong" asp-action="Index" role="alert" aria-live="assertive" hidden>
+                <span class="hmi-alarm-banner-icon" aria-hidden="true">!</span>
+                <span class="hmi-alarm-banner-message">Có cảnh báo chưa xử lý</span>
+                <span class="hmi-alarm-banner-action">XEM BÁO ĐỘNG</span>
+            </a>
+
+            @if (User.IsInRole("User"))
+            {
+                <div id="hmi-maintenance-notices" class="hmi-maintenance-notices" role="status" aria-live="polite" data-url="@Url.Action("MaintenanceNotifications", "Home")" hidden="@(maintenanceNotifications.Count == 0 ? "hidden" : null)">
+                    @foreach (var item in maintenanceNotifications)
+                    {
+                        <div class="hmi-maintenance-notice-line"><strong>BẢO TRÌ @item.ThietBi</strong> - @item.TrangThai / @item.Loai / ngày @item.NgayBt@if (!string.IsNullOrWhiteSpace(item.GhiChu)) { <span> / @item.GhiChu</span> }</div>
+                    }
+                </div>
+            }
+
+            @if (TempData["Error"] is string error)
+            {
+                <div class="hmi-action-message alarm">@error</div>
+            }
+
+            <div class="hmi-content">
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+    <div id="hmi-confirm" class="hmi-confirm" hidden role="dialog" aria-modal="true" aria-labelledby="hmi-confirm-title">
+        <div class="hmi-confirm-panel">
+            <h2 id="hmi-confirm-title">XÁC NHẬN THAO TÁC</h2>
+            <p id="hmi-confirm-message"></p>
+            <div class="hmi-btn-row hmi-confirm-actions">
+                <button id="hmi-confirm-cancel" type="button" class="hmi-btn">HỦY</button>
+                <button id="hmi-confirm-submit" type="button" class="hmi-btn hmi-btn-red">XÁC NHẬN</button>
+            </div>
+        </div>
+    </div>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <form id="post-command-token" hidden>@Html.AntiForgeryToken()</form>
+    <script>
+        (() => {
+            const postEndpoints = /\/(BangTai\/(SetModeAuto|SetModeManual|SetAuto|SetManual|SetSpeed|Start|Stop|Tien|Lui|EmergencyStop|BaoLoi|Reset|XyLanhAOn|XyLanhAOff|XyLanhBOn|XyLanhBOff|PhanLoai|SimulateSensor|PhatHienSanPham|ModeAuto|ModeManual|StartLine|StopLine|ResetLine|EmergencyLine|FaultLine)|BaoDong\/XacNhanTatCa)(?:\?|$)/i;
+            document.addEventListener('click', event => {
+                const link = event.target.closest('a');
+                if (!link || !postEndpoints.test(link.pathname + link.search)) return;
+
+                event.preventDefault();
+                if (link.dataset.confirm && !window.confirm(link.dataset.confirm)) return;
+                const form = document.createElement('form');
+                form.method = 'post';
+                form.action = link.href;
+                const token = document.querySelector('#post-command-token input[name="__RequestVerificationToken"]');
+                if (token) form.append(token.cloneNode());
+                document.body.append(form);
+                form.requestSubmit();
+            });
+
+            async function refreshAlarms() {
+                try {
+                    const res = await fetch('/BaoDong/ActiveCount');
+                    if (!res.ok) return;
+                    const data = await res.json();
+                    const badge = document.getElementById('alarm-badge');
+                    const banner = document.getElementById('hmi-alarm-banner');
+                    if (!badge || !banner) return;
+                    if (data.count > 0) {
+                        badge.hidden = false;
+                        badge.textContent = data.count;
+                        banner.hidden = false;
+                        banner.querySelector('.hmi-alarm-banner-message').textContent = `Có ${data.count} cảnh báo chưa xử lý`;
+                    } else {
+                        badge.hidden = true;
+                        banner.hidden = true;
+                    }
+                } catch { }
+            }
+            refreshAlarms();
+            setInterval(refreshAlarms, 10000);
+
+            const maintenanceNotices = document.getElementById('hmi-maintenance-notices');
+            if (maintenanceNotices) {
+                async function refreshMaintenanceNotices() {
+                    try {
+                        const response = await fetch(maintenanceNotices.dataset.url, { cache: 'no-store' });
+                        if (!response.ok) return;
+                        const items = await response.json();
+                        const lines = items.map(item => {
+                            const line = document.createElement('div');
+                            line.className = 'hmi-maintenance-notice-line';
+                            const title = document.createElement('strong');
+                            title.textContent = `BẢO TRÌ ${item.thietBi}`;
+                            line.append(title, document.createTextNode(` - ${item.trangThai} / ${item.loai} / ngày ${item.ngayBt}${item.ghiChu ? ` / ${item.ghiChu}` : ''}`));
+                            return line;
+                        });
+                        maintenanceNotices.replaceChildren(...lines);
+                        maintenanceNotices.hidden = lines.length === 0;
+                    } catch { }
+                }
+
+                refreshMaintenanceNotices();
+                setInterval(refreshMaintenanceNotices, 30000);
+            }
+        })();
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

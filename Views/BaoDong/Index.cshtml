@@ -1,0 +1,52 @@
+@model Zentro.Models.AlarmFilterViewModel
+@{
+    ViewData["Title"] = "Báo động & sự cố";
+}
+
+<h1 class="hmi-page-title">BÁO ĐỘNG & SỰ CỐ</h1>
+
+<div class="hmi-panel">
+    <form asp-action="Index" method="get" class="hmi-filter-grid">
+        <div><label>MÁY</label><select class="hmi-input" name="maMay"><option>Tất cả</option>@foreach (var machine in Model.MachineOptions) { <option value="@machine" selected="@(machine == Model.MaMay ? "selected" : null)">@machine</option> }</select></div>
+        <div><label>LOẠI</label><input class="hmi-input" name="loai" value="@(Model.LoaiCanhBao == "Tất cả" ? "" : Model.LoaiCanhBao)" /></div>
+        <div><label>TRẠNG THÁI</label><select class="hmi-input" name="trangThai"><option>Tất cả</option><option selected="@(Model.TrangThai == "CHƯA XỬ LÝ" ? "selected" : null)">CHƯA XỬ LÝ</option><option selected="@(Model.TrangThai == "ĐÃ XÁC NHẬN" ? "selected" : null)">ĐÃ XÁC NHẬN</option></select></div>
+        <div class="hmi-btn-row"><button class="hmi-btn" type="submit">LỌC</button><a class="hmi-btn" asp-action="ExportExcel" asp-route-maMay="@Model.MaMay" asp-route-loai="@Model.LoaiCanhBao" asp-route-trangThai="@Model.TrangThai">XUẤT EXCEL</a></div>
+    </form>
+</div>
+<div class="hmi-panel">
+    <table class="hmi-table">
+        <thead>
+            <tr>
+                <th>MỨC ĐỘ</th>
+                <th>THIẾT BỊ</th>
+                <th>NỘI DUNG</th>
+                <th>THỜI GIAN</th>
+                <th>THỜI LƯỢNG</th>
+                <th>TRẠNG THÁI</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.Items)
+            {
+                <tr>
+                    <td class="@(item.MucDo == "ERROR" ? "hmi-badge-error" : item.MucDo == "WARN" ? "hmi-badge-warn" : "hmi-badge-info")">@item.MucDo</td>
+                    <td>@item.ThietBi</td>
+                    <td>@item.NoiDung</td>
+                    <td>@item.ThoiGian</td>
+                    <td>@item.ThoiLuong</td>
+                    <td>@item.TrangThai</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (User.IsInRole("Admin") || User.IsInRole("Maintenance"))
+{
+    <div class="hmi-btn-row">
+        <form asp-action="XacNhanTatCa" method="post" style="display:inline;">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="hmi-btn">[ XÁC NHẬN TẤT CẢ ]</button>
+        </form>
+    </div>
+}

@@ -1,0 +1,100 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\C#\\WebNoiBo\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{7F080809-B6E7-978C-406E-3E901A12C0C3}|WebNoiBo.csproj|d:\\c#\\webnoibo\\data\\productiondbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7F080809-B6E7-978C-406E-3E901A12C0C3}|WebNoiBo.csproj|solutionrelative:data\\productiondbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7F080809-B6E7-978C-406E-3E901A12C0C3}|WebNoiBo.csproj|d:\\c#\\webnoibo\\database\\webnoibo.sql||{CC5D8DF0-88F4-4BB2-9DBB-B48CEE65C30A}",
+      "RelativeMoniker": "D:0:0:{7F080809-B6E7-978C-406E-3E901A12C0C3}|WebNoiBo.csproj|solutionrelative:database\\webnoibo.sql||{CC5D8DF0-88F4-4BB2-9DBB-B48CEE65C30A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7F080809-B6E7-978C-406E-3E901A12C0C3}|WebNoiBo.csproj|d:\\c#\\webnoibo\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{7F080809-B6E7-978C-406E-3E901A12C0C3}|WebNoiBo.csproj|solutionrelative:properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 1,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedHeight": 215,
+          "SelectedChildIndex": -1,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1c64b9c2-e352-428e-a56d-0ace190b99a6}"
+            }
+          ]
+        },
+        {
+          "DockedHeight": 290,
+          "SelectedChildIndex": 3,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:1:0:{d212f56b-c48a-434c-a121-1c5d80b59b9f}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "launchSettings.json",
+              "DocumentMoniker": "D:\\C#\\WebNoiBo\\Properties\\launchSettings.json",
+              "RelativeDocumentMoniker": "Properties\\launchSettings.json",
+              "ToolTip": "D:\\C#\\WebNoiBo\\Properties\\launchSettings.json",
+              "RelativeToolTip": "Properties\\launchSettings.json",
+              "ViewState": "AgIAAAgAAAAAAAAAAABBwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-09-17T02:31:14.305Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "ProductionDbContext.cs",
+              "DocumentMoniker": "D:\\C#\\WebNoiBo\\Data\\ProductionDbContext.cs",
+              "RelativeDocumentMoniker": "Data\\ProductionDbContext.cs",
+              "ToolTip": "D:\\C#\\WebNoiBo\\Data\\ProductionDbContext.cs",
+              "RelativeToolTip": "Data\\ProductionDbContext.cs",
+              "ViewState": "AgIAABYAAAAAAAAAAAA/wBUAAABUAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-17T02:26:41.213Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "WebNoiBo.sql",
+              "DocumentMoniker": "D:\\C#\\WebNoiBo\\Database\\WebNoiBo.sql",
+              "RelativeDocumentMoniker": "Database\\WebNoiBo.sql",
+              "ToolTip": "D:\\C#\\WebNoiBo\\Database\\WebNoiBo.sql",
+              "RelativeToolTip": "Database\\WebNoiBo.sql",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2026-09-15T03:50:06.95Z"
+            }
+          ]
+        },
+        {
+          "DockedHeight": 91,
+          "SelectedChildIndex": -1,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:2:0:{d212f56b-c48a-434c-a121-1c5d80b59b9f}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{34e76e81-ee4a-11d0-ae2e-00a0c90fffc3}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

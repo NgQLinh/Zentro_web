@@ -1,0 +1,57 @@
+@model List<Zentro.Models.MaintenanceItem>
+@{
+    ViewData["Title"] = "Bảo trì thiết bị";
+    var maintenanceHistory = ViewBag.History as List<Zentro.Models.MaintenanceHistoryRecord> ?? new();
+}
+
+<h1 class="hmi-page-title">BẢO TRÌ THIẾT BỊ</h1>
+
+<div class="hmi-panel maintenance-current-panel">
+    <div class="hmi-table-scroll">
+    <table class="hmi-table maintenance-table">
+        <thead>
+            <tr>
+                <th class="maintenance-device">THIẾT BỊ</th>
+                <th class="maintenance-type">LOẠI</th>
+                <th class="maintenance-date">NGÀY BT</th>
+                <th class="maintenance-date">LẦN TIẾP THEO</th>
+                <th class="maintenance-status">TRẠNG THÁI</th>
+                <th class="maintenance-person">NGƯỜI THỰC HIỆN</th>
+                <th class="maintenance-note">GHI CHÚ</th>
+                <th>CẬP NHẬT</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.ThietBi</td>
+                    <td>@item.Loai</td>
+                    <td class="maintenance-date">@item.NgayBt</td>
+                    <td class="maintenance-date">@item.LanTiepTheo</td>
+                    <td class="maintenance-status @(item.QuaHan ? "hmi-error" : item.SapDenHan || item.TrangThai == "SẮP ĐẾN" ? "hmi-warning" : "hmi-running")">@item.TrangThai @if (item.QuaHan) { <span>(QUÁ HẠN)</span> } else if (item.SapDenHan) { <span>(SẮP HẠN)</span> }</td>
+                    <td class="maintenance-person">@item.NguoiThucHien</td>
+                    <td class="maintenance-note">@item.GhiChu</td>
+                    <td><a class="hmi-btn" asp-action="Edit" asp-route-id="@item.Id">SỬA</a></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    </div>
+</div>
+
+<div class="hmi-btn-row"><a class="hmi-btn hmi-btn-green" asp-action="Create">+ TẠO LỊCH BẢO TRÌ</a><a class="hmi-btn" asp-action="ExportExcel">XUẤT EXCEL</a></div>
+<div class="hmi-panel maintenance-history-panel">
+    <div class="hmi-panel-title">LỊCH SỬ BẢO TRÌ</div>
+    <div class="hmi-table-scroll maintenance-history-scroll">
+        <table class="hmi-table maintenance-history-table">
+            <thead><tr><th>THỜI GIAN GHI NHẬN</th><th>THIẾT BỊ</th><th>NGÀY BẢO TRÌ</th><th>NGƯỜI THỰC HIỆN</th><th>NỘI DUNG</th></tr></thead>
+            <tbody>
+                @foreach (var item in maintenanceHistory)
+                {
+                    <tr><td>@item.GhiNhanLuc.ToString("dd/MM/yyyy HH:mm:ss")</td><td>@item.ThietBi</td><td>@item.NgayBt.ToString("dd/MM/yyyy")</td><td>@item.NguoiThucHien</td><td>@item.GhiChu</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

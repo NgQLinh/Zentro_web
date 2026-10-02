@@ -1,0 +1,117 @@
+@model Zentro.Models.SystemConfig
+@{
+    ViewData["Title"] = "Cài đặt hệ thống";
+    var config2 = ViewData["Config2"] as Zentro.Models.SystemConfig ?? new Zentro.Models.SystemConfig();
+}
+
+<h1 class="hmi-page-title">CÀI ĐẶT HỆ THỐNG</h1>
+
+@if (ViewData["Saved"] != null)
+{
+    <div class="hmi-panel"><p class="hmi-running">✓ Đã lưu cấu hình</p></div>
+}
+
+<div class="hmi-split hmi-settings-layout">
+    <aside class="hmi-panel hmi-settings-devices">
+        <div class="hmi-panel-title">THIẾT BỊ</div>
+        <ul class="hmi-list">
+            <li class="hmi-info"><a href="/BangTai/DieuKhien">● Băng tải 01</a></li>
+            <li><a asp-controller="BangTai" asp-action="DieuKhien2">● Băng tải 02</a></li>
+            <li><a href="/CamBien/Index">● Cảm biến 01</a></li>
+            <li><a href="/BangTai/PhanLoaiPage">● Máy phân loại</a></li>
+        </ul>
+    </aside>
+
+    <div class="hmi-config-stack">
+        <section class="hmi-panel hmi-settings-card">
+            <div class="hmi-panel-title">CẤU HÌNH BĂNG TẢI 01</div>
+            <form asp-action="Index" method="post" class="hmi-settings-form">
+                <div asp-validation-summary="ModelOnly" class="hmi-error"></div>
+                <div class="hmi-form-row">
+                    <label>Tốc độ mặc định</label>
+                    <span class="hmi-unit-input"><input class="hmi-input" type="number" name="TocDoMacDinh" value="@Model.TocDoMacDinh" min="0" max="100" /><span>%</span></span>
+                </div>
+                <div class="hmi-form-row">
+                    <label>Tốc độ tối đa</label>
+                    <span class="hmi-unit-input"><input class="hmi-input" type="number" name="TocDoToiDa" value="@Model.TocDoToiDa" min="1" max="100" /><span>%</span></span>
+                </div>
+                <div class="hmi-form-row">
+                    <label>Delay cảm biến</label>
+                    <span class="hmi-unit-input"><input class="hmi-input" type="number" name="DelayCamBien" value="@Model.DelayCamBien" min="0" max="10" /><span>s</span></span>
+                </div>
+                <div class="hmi-form-row">
+                    <label>Chu kỳ lưu cảm biến</label>
+                    <span class="hmi-unit-input"><input class="hmi-input" type="number" name="ChuKyLuuSensor" value="@Model.ChuKyLuuSensor" min="1" max="3600" /><span>s</span></span>
+                </div>
+                <div class="hmi-form-row">
+                    <label>Thời gian cảnh báo</label>
+                    <span class="hmi-unit-input"><input class="hmi-input" type="number" name="ThoiGianCanhBao" value="@Model.ThoiGianCanhBao" min="0" max="3600" /><span>s</span></span>
+                </div>
+                <div class="hmi-form-row">
+                    <label>Tự động khởi động</label>
+                    <select class="hmi-input" name="TuDongKhoiDong">
+                        <option value="true" selected="@(Model.TuDongKhoiDong)">ON</option>
+                        <option value="false" selected="@(!Model.TuDongKhoiDong)">OFF</option>
+                    </select>
+                </div>
+                <div class="hmi-form-row">
+                    <label>Cho phép chạy</label>
+                    <select class="hmi-input" name="ChoPhepChay">
+                        <option value="true" selected="@(Model.ChoPhepChay)">ON</option>
+                        <option value="false" selected="@(!Model.ChoPhepChay)">OFF</option>
+                    </select>
+                </div>
+                <div class="hmi-btn-row hmi-settings-actions">
+                    <button type="submit" class="hmi-btn hmi-btn-green">[ LƯU CẤU HÌNH ]</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="hmi-panel hmi-settings-card">
+            <div class="hmi-panel-title">CẤU HÌNH BĂNG TẢI 02</div>
+            @if (ViewData["Saved2"] != null)
+            {
+                <p class="hmi-running">Đã lưu cấu hình Băng tải 02</p>
+            }
+            <form asp-controller="CaiDat" asp-action="SaveConveyor2" method="post" class="hmi-settings-form">
+                <div class="hmi-form-row">
+                    <label>Tốc độ mặc định</label>
+                    <span class="hmi-unit-input"><input class="hmi-input" type="number" name="TocDoMacDinh" value="@config2.TocDoMacDinh" min="0" max="100" /><span>%</span></span>
+                </div>
+                <div class="hmi-form-row">
+                    <label>Tốc độ tối đa</label>
+                    <span class="hmi-unit-input"><input class="hmi-input" type="number" name="TocDoToiDa" value="@config2.TocDoToiDa" min="1" max="100" /><span>%</span></span>
+                </div>
+                <div class="hmi-form-row">
+                    <label>Delay cảm biến</label>
+                    <span class="hmi-unit-input"><input class="hmi-input" type="number" name="DelayCamBien" value="@config2.DelayCamBien" min="0" max="10" /><span>s</span></span>
+                </div>
+                <div class="hmi-form-row">
+                    <label>Chu kỳ lưu cảm biến</label>
+                    <span class="hmi-unit-input"><input class="hmi-input" type="number" name="ChuKyLuuSensor" value="@config2.ChuKyLuuSensor" min="1" max="3600" /><span>s</span></span>
+                </div>
+                <div class="hmi-form-row">
+                    <label>Thời gian cảnh báo</label>
+                    <span class="hmi-unit-input"><input class="hmi-input" type="number" name="ThoiGianCanhBao" value="@config2.ThoiGianCanhBao" min="0" max="3600" /><span>s</span></span>
+                </div>
+                <div class="hmi-form-row">
+                    <label>Tự động khởi động</label>
+                    <select class="hmi-input" name="TuDongKhoiDong">
+                        <option value="true" selected="@(config2.TuDongKhoiDong)">ON</option>
+                        <option value="false" selected="@(!config2.TuDongKhoiDong)">OFF</option>
+                    </select>
+                </div>
+                <div class="hmi-form-row">
+                    <label>Cho phép chạy</label>
+                    <select class="hmi-input" name="ChoPhepChay">
+                        <option value="true" selected="@(config2.ChoPhepChay)">ON</option>
+                        <option value="false" selected="@(!config2.ChoPhepChay)">OFF</option>
+                    </select>
+                </div>
+                <div class="hmi-btn-row hmi-settings-actions">
+                    <button type="submit" class="hmi-btn hmi-btn-green">[ LƯU CẤU HÌNH BT02 ]</button>
+                </div>
+            </form>
+        </section>
+    </div>
+</div>

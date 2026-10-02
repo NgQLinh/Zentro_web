@@ -1,0 +1,187 @@
+@model Zentro.Models.PinSettingsViewModel
+@{ ViewData["Title"] = "Mã PIN hệ thống"; ViewData["Menu"] = "taikhoan"; }
+<h1 class="hmi-page-title">ĐỔI MÃ PIN HỆ THỐNG</h1>
+<div class="hmi-panel">
+    <p class="hmi-stat-sub">Bạn phải nhập đúng PIN cũ trước khi được phép nhập PIN mới.</p>
+    <div class="hmi-btn-row">
+        <button type="button" class="hmi-btn hmi-btn-green" data-open-pin="admin">ĐỔI PIN ADMIN</button>
+        <button type="button" class="hmi-btn hmi-btn-green" data-open-pin="user">ĐỔI PIN USER</button>
+    </div>
+</div>
+
+<div id="pin-modal-backdrop" class="hmi-confirm-backdrop" hidden>
+    <div class="hmi-confirm-dialog">
+        <div class="hmi-confirm-title">XÁC NHẬN PIN CŨ</div>
+
+        <div id="pin-admin-form-panel" class="pin-dialog-panel" hidden>
+            @if (Model.ShowAdminNewPin)
+            {
+                <form asp-action="Pin" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="hmi-error"></div>
+                    <p>PIN cũ Admin đã đúng. Hãy nhập PIN mới.</p>
+                    <div class="hmi-filter-grid">
+                        <div>
+                            <label asp-for="AdminPin">PIN ADMIN MỚI</label>
+                            <div class="pin-dialog-entry" data-pin-entry>
+                                <input asp-for="AdminPin" class="hmi-input pin-dialog-input" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password" data-pin-display />
+                                <div class="pin-dialog-keypad" aria-label="Bàn phím nhập PIN"></div>
+                            </div>
+                            <span asp-validation-for="AdminPin" class="hmi-error"></span>
+                        </div>
+                    </div>
+                    <div class="hmi-btn-row hmi-confirm-actions">
+                        <button type="button" class="hmi-btn" data-close-pin>HỦY</button>
+                        <button type="submit" class="hmi-btn hmi-btn-green" disabled>LƯU</button>
+                    </div>
+                </form>
+            }
+            else
+            {
+                <form asp-action="VerifyOldPin" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="role" value="Admin" />
+                    <p>Nhập PIN Admin cũ để tiếp tục.</p>
+                    <div class="hmi-filter-grid">
+                        <div>
+                            <label for="oldPinAdmin">PIN ADMIN CŨ</label>
+                            <div class="pin-dialog-entry" data-pin-entry>
+                                <input id="oldPinAdmin" name="oldPin" class="hmi-input pin-dialog-input" type="password" inputmode="numeric" maxlength="6" autocomplete="current-password" data-pin-display required />
+                                <div class="pin-dialog-keypad" aria-label="Bàn phím nhập PIN"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hmi-btn-row hmi-confirm-actions">
+                        <button type="button" class="hmi-btn" data-close-pin>HỦY</button>
+                        <button type="submit" class="hmi-btn hmi-btn-green" disabled>XÁC NHẬN</button>
+                    </div>
+                </form>
+            }
+        </div>
+
+        <div id="pin-user-form-panel" class="pin-dialog-panel" hidden>
+            @if (Model.ShowUserNewPin)
+            {
+                <form asp-action="Pin" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="hmi-error"></div>
+                    <p>PIN cũ User đã đúng. Hãy nhập PIN mới.</p>
+                    <div class="hmi-filter-grid">
+                        <div>
+                            <label asp-for="UserPin">PIN USER MỚI</label>
+                            <div class="pin-dialog-entry" data-pin-entry>
+                                <input asp-for="UserPin" class="hmi-input pin-dialog-input" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password" data-pin-display />
+                                <div class="pin-dialog-keypad" aria-label="Bàn phím nhập PIN"></div>
+                            </div>
+                            <span asp-validation-for="UserPin" class="hmi-error"></span>
+                        </div>
+                    </div>
+                    <div class="hmi-btn-row hmi-confirm-actions">
+                        <button type="button" class="hmi-btn" data-close-pin>HỦY</button>
+                        <button type="submit" class="hmi-btn hmi-btn-green" disabled>LƯU</button>
+                    </div>
+                </form>
+            }
+            else
+            {
+                <form asp-action="VerifyOldPin" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="role" value="User" />
+                    <p>Nhập PIN User cũ để tiếp tục.</p>
+                    <div class="hmi-filter-grid">
+                        <div>
+                            <label for="oldPinUser">PIN USER CŨ</label>
+                            <div class="pin-dialog-entry" data-pin-entry>
+                                <input id="oldPinUser" name="oldPin" class="hmi-input pin-dialog-input" type="password" inputmode="numeric" maxlength="6" autocomplete="current-password" data-pin-display required />
+                                <div class="pin-dialog-keypad" aria-label="Bàn phím nhập PIN"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hmi-btn-row hmi-confirm-actions">
+                        <button type="button" class="hmi-btn" data-close-pin>HỦY</button>
+                        <button type="submit" class="hmi-btn hmi-btn-green" disabled>XÁC NHẬN</button>
+                    </div>
+                </form>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const modal = document.getElementById('pin-modal-backdrop');
+        const adminPanel = document.getElementById('pin-admin-form-panel');
+        const userPanel = document.getElementById('pin-user-form-panel');
+
+        function openPinDialog(type) {
+            modal.hidden = false;
+            adminPanel.hidden = type !== 'admin';
+            userPanel.hidden = type !== 'user';
+        }
+
+        function closePinDialog() {
+            modal.hidden = true;
+            adminPanel.hidden = true;
+            userPanel.hidden = true;
+        }
+
+        document.querySelectorAll('[data-open-pin]').forEach(button => {
+            button.addEventListener('click', () => openPinDialog(button.dataset.openPin));
+        });
+
+        document.querySelectorAll('[data-close-pin]').forEach(button => {
+            button.addEventListener('click', closePinDialog);
+        });
+
+        modal.addEventListener('click', (event) => {
+            if (event.target === modal) closePinDialog();
+        });
+
+        const initialRole = '@(Model.ShowAdminNewPin ? "admin" : Model.ShowUserNewPin ? "user" : "")';
+        if (initialRole) openPinDialog(initialRole);
+
+        document.querySelectorAll('[data-pin-entry]').forEach((entry) => {
+            const input = entry.querySelector('[data-pin-display]');
+            const keypad = entry.querySelector('.pin-dialog-keypad');
+            const submit = entry.closest('form').querySelector('button[type="submit"]');
+
+            const update = () => {
+                input.value = input.value.replace(/[^0-9]/g, '').slice(0, 6);
+                submit.disabled = input.value.length !== 6;
+            };
+
+            const addKey = (label, action, ariaLabel = label) => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'pin-dialog-key';
+                button.textContent = label;
+                button.setAttribute('aria-label', ariaLabel);
+                button.addEventListener('click', action);
+                keypad.append(button);
+            };
+
+            for (let number = 1; number <= 9; number++) {
+                addKey(String(number), () => {
+                    if (input.value.length < 6) input.value += number;
+                    update();
+                });
+            }
+
+            addKey('LÀM LẠI', () => {
+                input.value = '';
+                update();
+            }, 'Xóa toàn bộ PIN');
+            addKey('0', () => {
+                if (input.value.length < 6) input.value += '0';
+                update();
+            });
+            addKey('XÓA', () => {
+                input.value = input.value.slice(0, -1);
+                update();
+            }, 'Xóa chữ số cuối');
+
+            input.addEventListener('input', update);
+            update();
+        });
+    </script>
+}

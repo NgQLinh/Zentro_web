@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">Zentro</title>
+  <desc id="desc">Logo chữ Z kết hợp nhà máy</desc>
+  <rect width="64" height="64" rx="8" fill="#141c28"/>
+  <path d="M12 18h40L27 46h25" fill="none" stroke="#4da3ff" stroke-width="7" stroke-linecap="square" stroke-linejoin="miter"/>
+  <path d="M13 51V38h10v13M23 51V31h10v20M33 51V40h9v11M42 51V34h9v17" fill="none" stroke="#e8edf4" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M10 52h44" stroke="#3ddc84" stroke-width="3"/>
+</svg>

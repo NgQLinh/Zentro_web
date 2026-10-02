@@ -1,0 +1,60 @@
+@model Zentro.Models.DeviceDetailViewModel
+@{
+    ViewData["Title"] = $"Chi tiết {Model.ThietBi.Ten}";
+    var statusClass = $"status-{Model.ThietBi.TrangThai.ToLowerInvariant()}";
+}
+
+<h1 class="hmi-page-title">CHI TIẾT THIẾT BỊ</h1>
+
+<div class="hmi-panel device-detail-header">
+    <div>
+        <div class="hmi-panel-title">@Model.ThietBi.Ten (@Model.ThietBi.Ma)</div>
+        <div class="device-detail-type">@Model.ThietBi.Loai</div>
+    </div>
+    <strong class="device-status @statusClass">● @Model.ThietBi.TrangThai</strong>
+</div>
+
+<div class="hmi-grid-4">
+    <div class="hmi-stat"><div class="hmi-stat-label">TRẠNG THÁI</div><div class="hmi-stat-value device-status @statusClass">@Model.ThietBi.TrangThai</div></div>
+    <div class="hmi-stat"><div class="hmi-stat-label">TỐC ĐỘ</div><div class="hmi-stat-value">@Model.ThietBi.TocDo%</div></div>
+    <div class="hmi-stat"><div class="hmi-stat-label">SẢN LƯỢNG HÔM NAY</div><div class="hmi-stat-value">@Model.SanLuong</div></div>
+    <div class="hmi-stat"><div class="hmi-stat-label">PLC</div><div class="hmi-stat-value @(Model.Plc.IsConnected && !Model.Plc.IsStale ? "hmi-running" : "hmi-error")">@(Model.Plc.IsConnected && !Model.Plc.IsStale ? "CONNECTED" : "OFFLINE")</div></div>
+</div>
+
+<div class="hmi-panel">
+    <div class="hmi-panel-title">PLC CONNECTION</div>
+    <div class="hmi-form-row"><label>TRẠNG THÁI</label><strong>@(Model.Plc.IsConnected && !Model.Plc.IsStale ? "CONNECTED" : "OFFLINE")</strong></div>
+    <div class="hmi-form-row"><label>LAST UPDATE</label><strong>@(Model.Plc.LastCommunication?.ToString("HH:mm:ss") ?? "N/A")</strong></div>
+</div>
+
+<div class="hmi-panel">
+    <div class="hmi-panel-title">CẢM BIẾN</div>
+    <table class="hmi-table">
+        <thead><tr><th>MÃ</th><th>TÊN</th><th>LOẠI</th><th>GIÁ TRỊ</th><th>TRẠNG THÁI</th></tr></thead>
+        <tbody>
+        @foreach (var sensor in Model.CamBien)
+        {
+            <tr><td>@sensor.Ma</td><td>@sensor.Ten</td><td>@sensor.Loai</td><td>@sensor.GiaTri @sensor.DonVi</td><td class="@(sensor.IsActive ? "hmi-running" : "hmi-error")">@(sensor.IsActive ? "ON" : "OFF")</td></tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+<div class="hmi-panel">
+    <div class="hmi-panel-title">LỊCH SỬ THIẾT BỊ</div>
+    <table class="hmi-table">
+        <thead><tr><th>THỜI GIAN</th><th>SỰ KIỆN</th></tr></thead>
+        <tbody>
+        @if (Model.LichSu.Count == 0)
+        {
+            <tr><td colspan="2">Chưa có lịch sử.</td></tr>
+        }
+        @foreach (var item in Model.LichSu)
+        {
+            <tr><td>@item.Timestamp.ToString("HH:mm:ss")</td><td>@item.Message</td></tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+<a class="hmi-btn" asp-controller="Home" asp-action="Index">QUAY LẠI DASHBOARD</a>

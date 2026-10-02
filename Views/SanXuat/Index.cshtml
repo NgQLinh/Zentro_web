@@ -1,0 +1,67 @@
+@model Zentro.Models.BangTaiModel
+@{
+    ViewData["Title"] = "Quản lý sản xuất";
+}
+
+<h1 class="hmi-page-title">QUẢN LÝ SẢN XUẤT</h1>
+
+<div class="hmi-panel">
+    <div class="hmi-form-row"><label>LÔ SẢN XUẤT</label><span>@Model.LoSanXuat</span></div>
+    <div class="hmi-form-row"><label>SẢN PHẨM</label><span>@Model.SanPhamDangSx</span></div>
+</div>
+
+<div class="hmi-grid-3">
+    <div class="hmi-stat">
+        <div class="hmi-stat-label">KẾ HOẠCH</div>
+        <div class="hmi-stat-value">@Model.KeHoach</div>
+    </div>
+    <div class="hmi-stat">
+        <div class="hmi-stat-label">ĐÃ SẢN XUẤT</div>
+        <div class="hmi-stat-value hmi-running">@Model.SoSanPham</div>
+    </div>
+    <div class="hmi-stat">
+        <div class="hmi-stat-label">CÒN LẠI</div>
+        <div class="hmi-stat-value hmi-info">@Model.ConLai</div>
+    </div>
+</div>
+
+<div class="hmi-panel">
+    <div class="hmi-panel-title">SẢN LƯỢNG</div>
+    <div class="hmi-grid-4">
+        <div class="hmi-stat"><div class="hmi-stat-label">TỔNG</div><div class="hmi-stat-value">@Model.SoSanPham</div></div>
+        @foreach (var loai in BangTaiModel.LoaiLinhKien)
+        {
+            <div class="hmi-stat"><div class="hmi-stat-label">@loai.ToUpperInvariant()</div><div class="hmi-stat-value hmi-info">@Model.SoLuongTheoLoai[loai]</div></div>
+        }
+        <div class="hmi-stat"><div class="hmi-stat-label">LỖI</div><div class="hmi-stat-value hmi-warning">@Model.SoLoi</div></div>
+    </div>
+</div>
+
+<div class="hmi-panel">
+    <div class="hmi-panel-title">LỊCH SỬ SẢN PHẨM</div>
+    <table class="hmi-table">
+        <thead>
+            <tr>
+                <th>MÃ SP</th>
+                <th>LOẠI</th>
+                <th>KẾT QUẢ</th>
+                <th>THỜI GIAN</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.ProductHistory.Count == 0)
+            {
+                <tr><td colspan="4">Chưa có sản phẩm. Bấm START rồi chạy băng tải.</td></tr>
+            }
+            @foreach (var sp in Model.ProductHistory)
+            {
+                <tr>
+                    <td>@sp.MaSp</td>
+                    <td>@sp.Loai</td>
+                    <td class="@(sp.KetQua == "Lỗi" ? "hmi-error" : "hmi-running")">@sp.KetQua</td>
+                    <td>@sp.ThoiGian</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

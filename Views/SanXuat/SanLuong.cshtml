@@ -1,0 +1,12 @@
+@model Zentro.Models.BangTaiModel
+@{
+    ViewData["Title"] = "Sản lượng";
+    var good = Model.TongSanPhamDat;
+    var quality = Model.SoSanPham == 0 ? 0 : good * 100 / Model.SoSanPham;
+}
+
+<h1 class="hmi-page-title">BÁO CÁO SẢN LƯỢNG</h1>
+<div class="hmi-panel"><div class="hmi-panel-title">TỔNG QUAN CA HIỆN TẠI</div><div class="hmi-grid-4"><div class="hmi-stat"><div class="hmi-stat-label">TỔNG SẢN PHẨM</div><div class="hmi-stat-value">@Model.SoSanPham</div></div><div class="hmi-stat"><div class="hmi-stat-label">ĐẠT</div><div class="hmi-stat-value hmi-running">@good</div></div><div class="hmi-stat"><div class="hmi-stat-label">LỖI</div><div class="hmi-stat-value hmi-warning">@Model.SoLoi</div></div><div class="hmi-stat"><div class="hmi-stat-label">TỶ LỆ ĐẠT</div><div class="hmi-stat-value hmi-info">@quality%</div></div></div></div>
+<div class="hmi-panel"><div class="hmi-panel-title">SO SÁNH VỚI KẾ HOẠCH</div><div class="hmi-form-row"><label>LÔ</label><span>@Model.LoSanXuat</span></div><div class="hmi-form-row"><label>KẾ HOẠCH</label><strong>@Model.KeHoach</strong></div><div class="hmi-form-row"><label>ĐÃ SẢN XUẤT</label><strong class="hmi-running">@Model.SoSanPham</strong></div><div class="hmi-form-row"><label>CÒN LẠI</label><strong class="hmi-info">@Model.ConLai</strong></div></div>
+<div class="hmi-panel"><div class="hmi-panel-title">PHÂN BỔ LINH KIỆN</div><table class="hmi-table"><thead><tr><th>LINH KIỆN</th><th>SỐ LƯỢNG</th><th>TỶ TRỌNG</th><th>TRẠNG THÁI</th></tr></thead><tbody>@foreach (var loai in BangTaiModel.LoaiLinhKien) { <tr><td>@loai</td><td>@Model.SoLuongTheoLoai[loai]</td><td>@(Model.SoSanPham == 0 ? 0 : Model.SoLuongTheoLoai[loai] * 100 / Model.SoSanPham)%</td><td class="hmi-running">ĐẠT</td></tr> }<tr><td>Sản phẩm lỗi</td><td>@Model.SoLoi</td><td>@(Model.SoSanPham == 0 ? 0 : Model.SoLoi * 100 / Model.SoSanPham)%</td><td class="hmi-warning">KIỂM TRA</td></tr></tbody></table></div>
+<div class="hmi-panel"><div class="hmi-panel-title">SẢN PHẨM GẦN NHẤT</div><table class="hmi-table"><thead><tr><th>MÃ SP</th><th>LOẠI</th><th>KẾT QUẢ</th><th>THỜI GIAN</th></tr></thead><tbody>@if (Model.ProductHistory.Count == 0) { <tr><td colspan="4">Chưa có dữ liệu sản lượng.</td></tr> } @foreach (var item in Model.ProductHistory.Take(10)) { <tr><td>@item.MaSp</td><td>@item.Loai</td><td class="@(item.KetQua == "Lỗi" ? "hmi-error" : "hmi-running")">@item.KetQua</td><td>@item.ThoiGian</td></tr> }</tbody></table></div>

@@ -1,0 +1,279 @@
+@model Zentro.Models.BangTaiModel
+@{
+    ViewData["Title"] = "Giám sát băng tải";
+}
+
+<div class="plant-shell">
+    <aside class="left-menu">
+        <div class="menu-header">Nhà máy tự động hóa</div>
+        <div class="menu-list">
+            <div class="menu-item">Tổng quan</div>
+            <div class="menu-item">Dashboard</div>
+            <div class="menu-item active">Điều khiển</div>
+            <div class="menu-item">Thiết bị</div>
+            <div class="menu-item">Cảm biến</div>
+            <div class="menu-item">Sản xuất</div>
+            <div class="menu-item">Phân loại</div>
+            <div class="menu-item">Bảo động</div>
+            <div class="menu-item">Báo trì</div>
+            <div class="menu-item">Nhật ký</div>
+            <div class="menu-item">Cài đặt</div>
+        </div>
+    </aside>
+
+    <main class="main-panel">
+        <div class="top-strip">
+            <div class="brand-row">
+                <span class="brand">ZENTRO</span>
+                <span>Trang chủ</span>
+                <span>Băng tải</span>
+            </div>
+            <div class="user-bar">
+                <span>Admin</span>
+                <span class="online-dot"></span>
+                <span>ONLINE</span>
+            </div>
+        </div>
+
+        <div class="status-strip">
+            <div class="status-pill active">MODE: @Model.Mode</div>
+            <div class="status-pill secondary">STATE: @(Model.MotorRunning ? "RUN" : "STOP")</div>
+            <div class="status-pill alert">@(Model.BaoDay ? "BUFFER FULL" : "SYSTEM OK")</div>
+        </div>
+
+        <section class="panel-block main-overview">
+            <div class="title-row">
+                <h2>GIÁM SÁT BĂNG TẢI</h2>
+                <span class="title-mode @(Model.Mode == BangTaiMode.AUTO ? "auto" : "manual")">@Model.Mode</span>
+            </div>
+            <p>Trạng thái: <strong>@Model.TrangThai</strong></p>
+            <div class="mini-grid">
+                <div class="mini-box">
+                    <div class="mini-label">Motor</div>
+                    <div class="mini-value @(Model.MotorRunning ? "on" : "stop")">@(Model.MotorRunning ? "ĐANG CHẠY" : "ĐANG DỪNG")</div>
+                </div>
+                <div class="mini-box">
+                    <div class="mini-label">Cảm biến</div>
+                    <div class="mini-value @(Model.CamBien ? "on" : "off")">@(Model.CamBien ? "ON" : "OFF")</div>
+                </div>
+                <div class="mini-box">
+                    <div class="mini-label">Số sản phẩm</div>
+                    <div class="mini-value count">@Model.SoSanPham</div>
+                </div>
+                <div class="mini-box">
+                    <div class="mini-label">Linh kiện | Lỗi</div>
+                    <div class="mini-value small">@Model.TongSanPhamDat | @Model.SoLoi</div>
+                </div>
+            </div>
+            <div class="alert-banner">@(Model.BaoDay ? "CẢNH BÁO: BUFFER ĐẦY" : (Model.Mode == BangTaiMode.AUTO ? "AUTO: HỆ THỐNG ĐANG HOẠT ĐỘNG" : "MANUAL: CHỜ THAO TÁC THỦ CÔNG"))</div>
+            <div class="button-row">
+                <a class="machine-btn mode-auto @(Model.Mode == BangTaiMode.AUTO ? "active" : "")" href="/BangTai/ModeAuto" data-scroll-preserve="true">AUTO</a>
+                <a class="machine-btn mode-manual @(Model.Mode == BangTaiMode.MANUAL ? "active" : "")" href="/BangTai/ModeManual" data-scroll-preserve="true">MANUAL</a>
+                <a class="machine-btn" href="/BangTai/StartLine" data-scroll-preserve="true">START</a>
+                <a class="machine-btn" asp-route="stopLine" data-confirm="Bạn sắp STOP toàn bộ dây chuyền.">STOP</a>
+                <a class="machine-btn" asp-route="classification" asp-route-loai="Bánh răng" data-scroll-preserve="true">CẢM BIẾN</a>
+                <a class="machine-btn danger" asp-route="emergencyLine" data-confirm="Bạn sắp kích hoạt DỪNG KHẨN CẤP. Motor và xy lanh sẽ tắt ngay.">DỪNG KHẨN CẤP</a>
+                <a class="machine-btn warning" asp-route="faultLine" data-confirm="Bạn sắp kích hoạt BÁO LỖI MÁY.">BÁO LỖI MÁY</a>
+                <a class="machine-btn" asp-route="resetLine" data-confirm="Bạn sắp RESET toàn bộ dây chuyền. Dữ liệu sản phẩm hiện tại sẽ bị xóa.">RESET</a>
+            </div>
+        </section>
+
+        <section class="panel-block">
+            <div class="section-title">2. Dashboard chính</div>
+            <div class="dash-header">
+                <div class="dash-tag">TRẠNG THÁI NHÀ MÁY</div>
+                <div class="dash-status">@Model.Mode</div>
+            </div>
+            <div class="dash-row">
+                <div class="panel-stat">
+                    <div class="stat-name">Băng tải 01</div>
+                    <div class="stat-state @(Model.MotorRunning ? "running" : "active")">@(Model.MotorRunning ? "RUNNING" : "IDLE")</div>
+                    <div class="stat-num">@((Model.MotorRunning ? Model.TocDo : 0))%</div>
+                </div>
+                <div class="panel-stat">
+                    <div class="stat-name">Cảm biến</div>
+                    <div class="stat-state active">@(Model.CamBien ? "ACTIVE" : "READY")</div>
+                    <div class="stat-num">@(Model.CamBien ? 08 : 00)</div>
+                </div>
+                <div class="panel-stat">
+                    <div class="stat-name">Sản phẩm</div>
+                    <div class="stat-state warn">HÔM NAY</div>
+                    <div class="stat-num">@Model.SoSanPham</div>
+                </div>
+                <div class="panel-stat">
+                    <div class="stat-name">Lỗi</div>
+                    <div class="stat-state @(Model.SoLoi > 0 ? "warning" : "active")">@(Model.SoLoi > 0 ? "WARNING" : "NORMAL")</div>
+                    <div class="stat-num">@Model.SoLoi</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel-block">
+            <div class="section-title">3. Màn hình điều khiển băng tải</div>
+            <div class="controller-box">
+                <div class="controller-header">ĐIỀU KHIỂN BĂNG TẢI</div>
+                <div class="controller-main">
+                    <div class="controller-row line-head">
+                        <span>Thiết bị</span>
+                        <span>Trạng thái</span>
+                    </div>
+                    <div class="controller-row">
+                        <span>Băng tải 01</span>
+                        <span class="status online">● ONLINE</span>
+                    </div>
+                    <div class="controller-row">
+                        <span>Chế độ</span>
+                        <span>@Model.Mode</span>
+                    </div>
+                    <div class="controller-row">
+                        <span>START</span>
+                        <span>STOP</span>
+                        <span>RESET</span>
+                    </div>
+                    <div class="controller-row small-btns">
+                        <a class="mini-btn" href="/BangTai/ModeAuto">AUTO</a>
+                        <a class="mini-btn" href="/BangTai/StartLine">START</a>
+                        <a class="mini-btn" asp-route="stopLine" data-confirm="Bạn sắp STOP toàn bộ dây chuyền.">STOP</a>
+                        <a class="mini-btn" asp-route="resetLine" data-confirm="Bạn sắp RESET toàn bộ dây chuyền. Dữ liệu sản phẩm hiện tại sẽ bị xóa.">RESET</a>
+                    </div>
+                    <div class="controller-row range-box">
+                        <span>Tốc độ</span>
+                        <div class="range"><span>@Model.TocDo%</span></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel-block">
+            <div class="section-title">4. Màn hình cảm biến</div>
+            <table class="sensor-table">
+                <thead>
+                    <tr>
+                        <th>Mã</th>
+                        <th>Tên</th>
+                        <th>Loại</th>
+                        <th>Trạng thái</th>
+                        <th>Giá trị</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>CB01</td><td>Phát hiện SP</td><td>Quang</td><td>ACTIVE</td><td>ON</td></tr>
+                    <tr><td>CB02</td><td>Vị trí</td><td>Quang</td><td>ACTIVE</td><td>ON</td></tr>
+                    <tr><td>CB03</td><td>Nhận diện linh kiện</td><td>Phân loại</td><td>ACTIVE</td><td>READY</td></tr>
+                    <tr><td>CB04</td><td>Cuối băng tải</td><td>Quang</td><td>ACTIVE</td><td>OFF</td></tr>
+                    <tr><td>CB05</td><td>Nhiệt độ</td><td>Nhiệt</td><td>ACTIVE</td><td>42°C</td></tr>
+                    <tr><td>CB06</td><td>Trọng lượng</td><td>Cân</td><td>ACTIVE</td><td>1.2kg</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section class="panel-block">
+            <div class="section-title">5. Màn hình sản xuất</div>
+            <div class="production-box">
+                <div class="production-head">
+                    <span>Lô sản xuất: @Model.LoSanXuat</span>
+                    <span>Sản phẩm: @Model.SanPhamDangSx</span>
+                </div>
+                <div class="production-summary">
+                    <div><span>Kế hoạch</span><strong>1000</strong></div>
+                    <div><span>Đã sản xuất</span><strong>@Model.SoSanPham</strong></div>
+                    <div><span>Còn lại</span><strong>@Model.ConLai</strong></div>
+                </div>
+                <div class="production-total">
+                    <div><span>Linh kiện đạt</span><strong>@Model.TongSanPhamDat</strong></div>
+                    <div><span>Nhóm linh kiện</span><strong>@BangTaiModel.LoaiLinhKien.Count</strong></div>
+                    <div><span>Giới hạn</span><strong>@Model.BufferMax</strong></div>
+                    <div><span>Lỗi</span><strong>@Model.SoLoi</strong></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel-block">
+            <div class="section-title">6. Màn hình báo động</div>
+            <table class="alarm-table">
+                <thead>
+                    <tr>
+                        <th>Mức độ</th>
+                        <th>Thiết bị</th>
+                        <th>Nội dung</th>
+                        <th>Thời gian</th>
+                        <th>Trạng thái</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>ERROR</td><td>Băng tải 01</td><td>Quá tải</td><td>08:30</td><td>CHỪA XỬ LÝ</td></tr>
+                    <tr><td>WARN</td><td>Cảm biến 02</td><td>Mất tín</td><td>08:25</td><td>ĐÃ XÁC NHẬN</td></tr>
+                    <tr><td>INFO</td><td>Máy phân loại 01</td><td>Hoàn tất</td><td>08:20</td><td>ĐÃ XỬ LÝ</td></tr>
+                </tbody>
+            </table>
+            <div class="confirm-btn-wrap"><button class="confirm-btn">XÁC NHẬN TẤT CẢ</button></div>
+        </section>
+
+        <section class="panel-block">
+            <div class="section-title">7. Màn hình bảo trì</div>
+            <table class="maintenance-table">
+                <thead>
+                    <tr>
+                        <th>Thiết bị</th>
+                        <th>Loại</th>
+                        <th>Ngày</th>
+                        <th>Ngày tiếp theo</th>
+                        <th>Trạng thái</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>BT01</td><td>Đinh ký</td><td>15/08/2026</td><td>15/09/2026</td><td>OK</td></tr>
+                    <tr><td>CB02</td><td>Sửa chữa</td><td>10/08/2026</td><td>--</td><td>OK</td></tr>
+                    <tr><td>M01</td><td>Định kỳ</td><td>01/08/2026</td><td>01/09/2026</td><td>SẮP ĐẾN</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section class="panel-block">
+            <div class="section-title">8. Màn hình cài đặt</div>
+            <div class="settings-box">
+                <div class="settings-left">
+                    <div class="settings-list">
+                        <div>Băng tải 01</div>
+                        <div>Băng tải 02</div>
+                        <div>Cảm biến 01</div>
+                        <div>Máy phân loại</div>
+                    </div>
+                </div>
+                <div class="settings-right">
+                    <div class="setting-row"><span>Tốc độ mặc định</span><span>[50 ] %</span></div>
+                    <div class="setting-row"><span>Tốc độ tối đa</span><span>[100 ] %</span></div>
+                    <div class="setting-row"><span>Delay cảm biến</span><span>[ 2 ] s</span></div>
+                    <div class="setting-row"><span>Tự động khởi động</span><span>[ ON ]</span></div>
+                    <div class="setting-row"><span>Chế độ chảy</span><span>[ ON ]</span></div>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<script>
+    (() => {
+        const key = 'bangtai-scroll-position';
+
+        const restoreScroll = () => {
+            const saved = sessionStorage.getItem(key);
+            if (saved !== null) {
+                const y = Number(saved);
+                if (!Number.isNaN(y)) {
+                    window.scrollTo({ top: y, behavior: 'auto' });
+                }
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            restoreScroll();
+
+            document.querySelectorAll('[data-scroll-preserve="true"]').forEach((element) => {
+                element.addEventListener('click', () => {
+                    sessionStorage.setItem(key, String(window.scrollY));
+                });
+            });
+        });
+    })();
+</script>

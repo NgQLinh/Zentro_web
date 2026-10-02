@@ -1,0 +1,5 @@
+@model List<Zentro.Models.PartRecord>
+@{ ViewData["Title"] = "Mã sản phẩm / Index"; ViewData["Menu"] = "parts"; }
+<h1 class="hmi-page-title">MÃ SẢN PHẨM / INDEX</h1>
+<div class="hmi-btn-row"><a class="hmi-btn hmi-btn-green" asp-action="Create">THÊM PART</a><form method="get"><input class="hmi-input" name="q" value="@ViewBag.Search" placeholder="Tìm Index, mã SP, chi tiết" /><button class="hmi-btn" type="submit">TÌM</button></form></div>
+<div class="hmi-panel"><table class="hmi-table"><thead><tr><th>INDEX</th><th>MÃ SP</th><th>TÊN CHI TIẾT</th><th>MÁY</th><th>TẠO LÚC</th><th>THAO TÁC</th></tr></thead><tbody>@foreach (var part in Model) { <tr><td>@part.MaIndex</td><td>@part.MaSp</td><td>@part.TenChiTiet</td><td>@(part.MaMay ?? "Tất cả")</td><td>@part.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td><td><a class="hmi-btn" asp-action="Edit" asp-route-id="@part.Id">SỬA</a><form asp-action="Delete" method="post" style="display:inline">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@part.Id" /><button class="hmi-btn hmi-btn-red" type="submit">XÓA</button></form></td></tr> }</tbody></table></div>

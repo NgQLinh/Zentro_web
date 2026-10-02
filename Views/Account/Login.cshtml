@@ -1,0 +1,40 @@
+@model Zentro.Models.LoginViewModel
+@{
+    Layout = null;
+    ViewData["Title"] = "Đăng nhập hệ thống";
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ZENTRO – HỆ THỐNG QUẢN LÝ SẢN XUẤT</title>
+    <link rel="icon" type="image/png" href="~/images/logo.png" />
+    <link rel="stylesheet" href="~/css/hmi.css" asp-append-version="true" />
+</head>
+<body class="hmi-body login-body">
+    <main class="login-shell">
+        <section class="login-panel" aria-labelledby="login-title">
+            <div class="login-brand"><img class="zentro-logo" src="~/images/zentro-logo.svg" alt="Zentro" /><span>ZENTRO</span></div>
+            <div class="login-status"><span class="login-status-dot"></span> ZENTRO</div>
+            <h1 id="login-title">XÁC THỰC TRUY CẬP</h1>
+            <p class="login-subtitle">Đăng nhập để tiếp tục vào trung tâm điều khiển</p>
+
+            <form asp-controller="Account" asp-action="Login" method="post">
+                <input asp-for="ReturnUrl" type="hidden" />
+                <div asp-validation-summary="ModelOnly" class="login-error"></div>
+                <label asp-for="Username">TÀI KHOẢN</label>
+                <input asp-for="Username" class="login-input" autocomplete="username" autofocus />
+                <span asp-validation-for="Username" class="login-field-error"></span>
+
+                <label asp-for="Password">MẬT KHẨU</label>
+                <input asp-for="Password" class="login-input" autocomplete="current-password" />
+                <span asp-validation-for="Password" class="login-field-error"></span>
+
+                <button type="submit" class="hmi-btn hmi-btn-green login-submit">ĐĂNG NHẬP VÀO HỆ THỐNG</button>
+            </form>
+            <div class="login-footer">ACCESS CONTROL // AUTHORIZED PERSONNEL ONLY</div>
+        </section>
+    </main>
+</body>
+</html>

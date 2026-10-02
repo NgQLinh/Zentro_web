@@ -1,0 +1,4 @@
+@model List<Zentro.Models.UserRecord>
+@{ ViewData["Title"] = "Tài khoản"; ViewData["Menu"] = "taikhoan"; }
+<h1 class="hmi-page-title">QUẢN LÝ TÀI KHOẢN</h1><div class="hmi-btn-row"><a class="hmi-btn hmi-btn-green" asp-action="Create">THÊM TÀI KHOẢN</a><a class="hmi-btn" asp-action="Pin">ĐỔI PIN HỆ THỐNG</a></div>
+<div class="hmi-panel"><table class="hmi-table"><thead><tr><th>TÀI KHOẢN</th><th>QUYỀN</th><th>TRẠNG THÁI</th><th>TẠO LÚC</th><th>THAO TÁC</th></tr></thead><tbody>@foreach (var user in Model) { <tr><td>@user.Username</td><td>@user.Role</td><td>@(user.IsActive ? "ACTIVE" : "LOCKED")</td><td>@user.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td><td><a class="hmi-btn" asp-action="Edit" asp-route-id="@user.Id">SỬA</a><form asp-action="Delete" method="post" style="display:inline">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@user.Id" /><button class="hmi-btn hmi-btn-red" type="submit">XÓA</button></form></td></tr> }</tbody></table></div>

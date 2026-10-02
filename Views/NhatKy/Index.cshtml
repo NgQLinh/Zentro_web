@@ -1,0 +1,74 @@
+@model Zentro.Models.OperationLogViewModel
+@{
+    ViewData["Title"] = "Nhật ký vận hành";
+}
+
+<h1 class="hmi-page-title">NHẬT KÝ VẬN HÀNH</h1>
+
+<div class="hmi-panel">
+    <div class="hmi-panel-title">TÌM KIẾM LỊCH SỬ</div>
+    <form method="get" class="hmi-filter-grid">
+        <div><label for="fromDate">TỪ NGÀY</label><input id="fromDate" class="hmi-input" type="date" name="fromDate" value="@(Model.FromDate?.ToString("yyyy-MM-dd"))" /></div>
+        <div><label for="toDate">ĐẾN NGÀY</label><input id="toDate" class="hmi-input" type="date" name="toDate" value="@(Model.ToDate?.ToString("yyyy-MM-dd"))" /></div>
+        <div><label for="month">THÁNG</label><select id="month" class="hmi-input" name="month"><option value="">Tất cả</option>@for (var month = 1; month <= 12; month++) { <option value="@month" selected="@(Model.Month == month ? "selected" : null)">@month</option> }</select></div>
+        <div><label for="year">NĂM</label><input id="year" class="hmi-input" type="number" name="year" min="2000" max="2100" value="@Model.Year" placeholder="VD: 2026" /></div>
+        <div><label>TÀI KHOẢN</label><input class="hmi-input" name="username" /></div>
+        <div><label>LOẠI THAO TÁC</label><input class="hmi-input" name="action" placeholder="MACHINING_START" /></div>
+        <div><label>MÁY</label><input class="hmi-input" name="maMay" /></div>
+        <div class="hmi-btn-row"><button class="hmi-btn hmi-btn-green" type="submit">TÌM KIẾM</button><a class="hmi-btn" asp-action="Index">XÓA LỌC</a></div>
+    </form>
+</div>
+
+<div class="hmi-panel"><div class="hmi-panel-title">NHẬT KÝ THAO TÁC TÀI KHOẢN (@Model.ActionItems.Count)</div><table class="hmi-table"><thead><tr><th>THỜI GIAN</th><th>TÀI KHOẢN</th><th>QUYỀN</th><th>THAO TÁC</th><th>MÁY</th><th>INDEX</th><th>KẾT QUẢ</th><th>NỘI DUNG</th></tr></thead><tbody>@if (Model.ActionItems.Count == 0) { <tr><td colspan="8">Chưa có nhật ký thao tác.</td></tr> } @foreach (var item in Model.ActionItems) { <tr><td>@item.ThoiDiem.ToString("dd/MM/yyyy HH:mm:ss")</td><td>@item.Username</td><td>@item.Role</td><td>@item.LoaiThaoTac</td><td>@item.MaMay</td><td>@item.MaIndex</td><td class="@(item.ThanhCong ? "hmi-running" : "hmi-error")">@(item.ThanhCong ? "THÀNH CÔNG" : "THẤT BẠI")</td><td>@item.NoiDung @item.Loi</td></tr> }</tbody></table></div>
+
+<div class="hmi-panel">
+    <div class="hmi-panel-title">LỊCH SỬ VẬN HÀNH (@Model.TotalItems)</div>
+    <table class="hmi-table">
+        <thead>
+            <tr>
+                <th>THỜI GIAN</th>
+                <th>THIẾT BỊ</th>
+                <th>LOẠI</th>
+                <th>SỰ KIỆN</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Items.Count == 0)
+            {
+                <tr><td colspan="4">Không có sự kiện theo bộ lọc.</td></tr>
+            }
+            @foreach (var item in Model.Items)
+            {
+                <tr>
+                    <td>@item.Timestamp.ToString("dd/MM/yyyy HH:mm:ss")</td>
+                    <td>@(string.IsNullOrWhiteSpace(item.Device) ? "HỆ THỐNG" : item.Device)</td>
+                    <td>@(string.IsNullOrWhiteSpace(item.EventType) ? "SYSTEM" : item.EventType)</td>
+                    <td>@item.Message</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    @if (Model.TotalPages > 1)
+    {
+        <div class="hmi-pagination">
+            @if (Model.Page > 1)
+            {
+                <a class="hmi-btn" asp-route-fromDate="@Model.FromDate?.ToString("yyyy-MM-dd")" asp-route-toDate="@Model.ToDate?.ToString("yyyy-MM-dd")" asp-route-month="@Model.Month" asp-route-year="@Model.Year" asp-route-page="@(Model.Page - 1)">TRƯỚC</a>
+            }
+            <span>TRANG @Model.Page / @Model.TotalPages</span>
+            <form method="get" class="hmi-page-jump">
+                <input type="hidden" name="fromDate" value="@(Model.FromDate?.ToString("yyyy-MM-dd"))" />
+                <input type="hidden" name="toDate" value="@(Model.ToDate?.ToString("yyyy-MM-dd"))" />
+                <input type="hidden" name="month" value="@Model.Month" />
+                <input type="hidden" name="year" value="@Model.Year" />
+                <label for="page">ĐẾN TRANG</label>
+                <input id="page" name="page" type="number" min="1" max="@Model.TotalPages" value="@Model.Page" aria-label="Số trang cần đến" />
+                <button class="hmi-btn" type="submit">ĐI</button>
+            </form>
+            @if (Model.Page < Model.TotalPages)
+            {
+                <a class="hmi-btn" asp-route-fromDate="@Model.FromDate?.ToString("yyyy-MM-dd")" asp-route-toDate="@Model.ToDate?.ToString("yyyy-MM-dd")" asp-route-month="@Model.Month" asp-route-year="@Model.Year" asp-route-page="@(Model.Page + 1)">SAU</a>
+            }
+        </div>
+    }
+</div>
